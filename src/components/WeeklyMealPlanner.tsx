@@ -74,23 +74,48 @@ export function WeeklyMealPlanner() {
     );
   };
 
-  const renderProgressBar = (
+  const renderCompactProgressBar = (
     current: number,
     target: number,
     label: string
   ) => {
     const percentage = Math.min((current / target) * 100, 100);
     return (
-      <div className="mb-2">
-        <div className="flex justify-between mb-1">
-          <span className="text-sm font-medium">{label}</span>
-          <span className="text-sm font-medium">
-            {current}/{target}
-          </span>
-        </div>
-        <Progress value={percentage} className="w-full" />
+      <div className="flex items-center space-x-1">
+        <span className="text-xs font-medium w-8">{label[0]}</span>
+        <Progress value={percentage} className="w-8 h-2" />
+        <span className="text-xs font-medium w-8">
+          {current}/{target}
+        </span>
       </div>
     );
+  };
+
+  const renderNutrientIndicator = (
+    current: number,
+    target: number,
+    label: string,
+    color: string
+  ) => {
+    const percentage = (current / target) * 100;
+    return (
+      <div className="flex items-center space-x-1">
+        <span className="text-xs font-medium">{label[0]}</span>
+        <div
+          className={`w-2 h-2 rounded-full ${color}`}
+          style={{ opacity: Math.min(percentage / 100, 1) }}
+        />
+      </div>
+    );
+  };
+
+  const renderNutrientBar = (
+    current: number,
+    target: number,
+    color: string
+  ) => {
+    const percentage = Math.min((current / target) * 100, 100);
+    return <Progress value={percentage} className={`w-8 h-2 ${color}`} />;
   };
 
   if (!showPlanner) {
@@ -149,13 +174,13 @@ export function WeeklyMealPlanner() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Card>
         <CardHeader>
           <CardTitle>Your Daily Nutrition Targets</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>Calories: {nutritionTarget.calories}</p>
+          <p>Calories: {nutritionTarget.calories} kcal</p>
           <p>Protein: {nutritionTarget.protein}g</p>
           <p>Carbs: {nutritionTarget.carbs}g</p>
           <p>Fats: {nutritionTarget.fats}g</p>
@@ -166,30 +191,30 @@ export function WeeklyMealPlanner() {
         const dailyNutrition = calculateDailyNutrition(weeklyPlan[day]);
         return (
           <Card key={day}>
-            <CardHeader>
-              <CardTitle>{day}</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between py-2 pr-2">
+              <CardTitle className="text-lg">{day}</CardTitle>
+              <div className="flex items-center space-x-2">
+                {renderNutrientBar(
+                  dailyNutrition.protein,
+                  nutritionTarget.protein,
+                  "bg-blue-500"
+                )}
+                {renderNutrientBar(
+                  dailyNutrition.carbs,
+                  nutritionTarget.carbs,
+                  "bg-yellow-500"
+                )}
+                {renderNutrientBar(
+                  dailyNutrition.fats,
+                  nutritionTarget.fats,
+                  "bg-red-500"
+                )}
+                <span className="text-xs font-medium">
+                  {dailyNutrition.calories} kcal
+                </span>
+              </div>
             </CardHeader>
             <CardContent>
-              {renderProgressBar(
-                dailyNutrition.calories,
-                nutritionTarget.calories,
-                "Calories"
-              )}
-              {renderProgressBar(
-                dailyNutrition.protein,
-                nutritionTarget.protein,
-                "Protein"
-              )}
-              {renderProgressBar(
-                dailyNutrition.carbs,
-                nutritionTarget.carbs,
-                "Carbs"
-              )}
-              {renderProgressBar(
-                dailyNutrition.fats,
-                nutritionTarget.fats,
-                "Fats"
-              )}
               {weeklyPlan[day].map((meal, index) => (
                 <MealCard key={index} meal={meal} />
               ))}
