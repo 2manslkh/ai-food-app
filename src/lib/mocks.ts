@@ -75,7 +75,7 @@ export const mockMealPlan: MealPlan = {
   ],
 };
 
-export const mockMeals = [{
+export const mockMeals: Meal[] = [{
     id: '1',
     name: "Oatmeal with Berries",
     type: "breakfast",
@@ -134,16 +134,16 @@ export const mockMeals = [{
 ];
 
 export function generateMockMeals(count: number): Meal[] {
-  const mockMeals: Meal[] = [];
+  const output: Meal[] = [];
 
   for (let i = 0; i < count; i++) {
     const randomIndex = Math.floor(Math.random() * mockMeals.length);
     const randomMeal = mockMeals[randomIndex];
-    mockMeals.push({
+    output.push({
       ...randomMeal,
       id: `meal-${i + 1}`,
     });
   }
 
-  return mockMeals;
+  return output;
 }

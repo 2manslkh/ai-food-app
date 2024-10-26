@@ -23,9 +23,7 @@ export function MealCard({ meal }: MealCardProps) {
             className="rounded-md"
           />
         </div>
-        <p className="text-sm text-muted-foreground mb-2">
-          {meal.type.charAt(0).toUpperCase() + meal.type.slice(1)}
-        </p>
+        <p className="text-sm text-muted-foreground mb-2">{meal.type}</p>
         <p className="text-sm mb-2">
           Calories: {meal.nutrition.calories} | Protein:{" "}
           {meal.nutrition.protein}g | Carbs: {meal.nutrition.carbs}g | Fats:{" "}

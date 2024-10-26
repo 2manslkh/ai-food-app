@@ -48,6 +48,7 @@ export function AIChat() {
 
         // Generate mock meals
         const mockMeals = generateMockMeals(20);
+        console.log("🚀 | setTimeout | mockMeals:", mockMeals);
 
         setGeneratedMeals(mockMeals);
         setShowDishSwiper(true);
@@ -71,53 +72,52 @@ export function AIChat() {
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardContent className="p-6">
-        {!showDishSwiper ? (
-          <ScrollArea className="h-[400px] pr-4">
-            {messages.map((message, index) => (
-              <div
-                key={index}
-                className={`mb-4 ${
-                  message.role === "user" ? "text-right" : "text-left"
+        <ScrollArea className="h-[400px]">
+          {messages.map((message, index) => (
+            <div
+              key={index}
+              className={`mb-4 ${
+                message.role === "user" ? "text-right" : "text-left"
+              }`}
+            >
+              <span
+                className={`inline-block p-2 rounded-lg ${
+                  message.role === "user"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted"
                 }`}
               >
-                <span
-                  className={`inline-block p-2 rounded-lg ${
-                    message.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
-                  }`}
-                >
-                  {message.content}
-                </span>
-              </div>
-            ))}
-            {isLoading && (
-              <div className="flex justify-center items-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-              </div>
-            )}
-          </ScrollArea>
-        ) : (
-          <DishSwiper
-            dishes={generatedMeals}
-            onComplete={handleDishSwiperComplete}
-          />
-        )}
+                {message.content}
+              </span>
+            </div>
+          ))}
+          {isLoading && (
+            <div className="flex justify-center items-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            </div>
+          )}
+          {showDishSwiper && (
+            <div className="mt-4">
+              <DishSwiper
+                dishes={generatedMeals}
+                onComplete={handleDishSwiperComplete}
+              />
+            </div>
+          )}
+        </ScrollArea>
       </CardContent>
-      {!showDishSwiper && (
-        <CardFooter>
-          <form onSubmit={handleSubmit} className="flex w-full space-x-2">
-            <Input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message here..."
-              className="flex-grow"
-            />
-            <Button type="submit">Send</Button>
-          </form>
-        </CardFooter>
-      )}
+      <CardFooter>
+        <form onSubmit={handleSubmit} className="flex w-full space-x-2">
+          <Input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type your message here..."
+            className="flex-grow"
+          />
+          <Button type="submit">Send</Button>
+        </form>
+      </CardFooter>
     </Card>
   );
 }
