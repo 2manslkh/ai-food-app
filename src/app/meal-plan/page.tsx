@@ -7,7 +7,7 @@ import { WeeklyMealPlanner } from "@/components/WeeklyMealPlanner";
 
 const MealPlanPage: React.FC = () => {
   return (
-    <div>
+    <div className="container mx-auto px-4 py-8 overflow-auto">
       <WeeklyMealPlanner />
       <MealPlanDisplay mealPlan={mockMealPlan} />
     </div>

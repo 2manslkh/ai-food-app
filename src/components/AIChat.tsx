@@ -109,7 +109,7 @@ export function AIChat() {
           )}
         </div>
       </ScrollArea>
-      <div className="bg-background p-4 border-t">
+      <div className="bg-background p-4 border-t sticky bottom-0">
         <form onSubmit={handleSubmit} className="flex space-x-2">
           <Input
             type="text"

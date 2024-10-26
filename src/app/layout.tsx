@@ -34,7 +34,7 @@ export default function RootLayout({
           <body className="antialiased bg-background text-foreground font-sans">
             <div className="flex flex-col h-screen">
               <Navbar />
-              <main className="flex-grow overflow-hidden">{children}</main>
+              <main className="flex-grow">{children}</main>
             </div>
           </body>
         </SupabaseProvider>
