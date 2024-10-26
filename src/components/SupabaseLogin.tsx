@@ -35,7 +35,7 @@ export function SupabaseLogin() {
       const { error } = await supabase.auth.signInWithOtp({
         email: email,
         options: {
-          emailRedirectTo: `${window.location.origin}`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       if (error) throw error;
@@ -54,7 +54,7 @@ export function SupabaseLogin() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}`,
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       if (error) throw error;
