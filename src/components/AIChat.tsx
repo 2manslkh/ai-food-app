@@ -72,7 +72,7 @@ export function AIChat() {
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardContent className="p-6">
-        <ScrollArea className="h-[400px]">
+        <ScrollArea className="h-[500px]">
           {messages.map((message, index) => (
             <div
               key={index}

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSupabase } from "./SupabaseProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Image from "next/image";
 
 export function SupabaseLogin() {
   const [loading, setLoading] = useState(false);
@@ -11,6 +12,7 @@ export function SupabaseLogin() {
   const [message, setMessage] = useState("");
   const [authChecking, setAuthChecking] = useState(true);
   const { supabase, user } = useSupabase();
+  const [emailLogin, setEmailLogin] = useState(false);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -35,7 +37,7 @@ export function SupabaseLogin() {
       const { error } = await supabase.auth.signInWithOtp({
         email: email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${window.location.origin}`,
         },
       });
       if (error) throw error;
@@ -54,7 +56,7 @@ export function SupabaseLogin() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}`,
         },
       });
       if (error) throw error;
@@ -88,36 +90,56 @@ export function SupabaseLogin() {
 
   if (user) {
     return (
-      <div className="space-y-4">
+      <>
         <p>Welcome, {user.user_metadata.full_name || user.email}!</p>
         <Button onClick={handleLogout} disabled={loading}>
           {loading ? "Loading..." : "Logout"}
         </Button>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <form onSubmit={handleEmailLogin} className="space-y-4">
-        <Input
-          type="email"
-          placeholder="Enter your email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <Button type="submit" disabled={loading}>
-          {loading ? "Loading..." : "Send Magic Link"}
-        </Button>
-      </form>
-      <div className="text-center">
-        <span className="text-gray-500">or</span>
-      </div>
-      <Button onClick={handleGoogleLogin} disabled={loading} className="w-full">
-        {loading ? "Loading..." : "Login with Google"}
-      </Button>
+    <>
+      {emailLogin && (
+        <>
+          <form onSubmit={handleEmailLogin} className="space-y-4">
+            <Input
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <Button type="submit" disabled={loading}>
+              {loading ? "Loading..." : "Send Magic Link"}
+            </Button>
+          </form>
+          <div className="text-center">
+            <span className="text-gray-500">or</span>
+          </div>
+        </>
+      )}
+      <button
+        onClick={handleGoogleLogin}
+        disabled={loading}
+        className="w-full flex items-center justify-center"
+      >
+        {loading ? (
+          "Loading..."
+        ) : (
+          <>
+            <Image
+              src="/web_light_sq_SI.svg"
+              alt="Google Sign-In"
+              width={175}
+              height={40}
+              className=""
+            />
+          </>
+        )}
+      </button>
       {message && <p className="text-sm text-center text-red-500">{message}</p>}
-    </div>
+    </>
   );
 }

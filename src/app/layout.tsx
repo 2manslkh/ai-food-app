@@ -34,7 +34,7 @@ export default function RootLayout({
           <body className="antialiased bg-background text-foreground font-sans">
             <div className="min-h-screen flex flex-col">
               <Navbar />
-              <main className="flex-grow container mx-auto p-4">
+              <main className="flex flex-col flex-grow container mx-auto p-4 h-full">
                 {children}
               </main>
             </div>
