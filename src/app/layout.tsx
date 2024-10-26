@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Navbar } from "../components/Navbar";
 import { ThemeProvider } from "../components/ThemeProvider";
+import { SupabaseProvider } from "@/components/SupabaseProvider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -29,14 +30,16 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <ThemeProvider>
-        <body className="antialiased bg-background text-foreground font-sans">
-          <div className="min-h-screen flex flex-col">
-            <Navbar />
-            <main className="flex-grow container mx-auto px-4 py-8">
-              {children}
-            </main>
-          </div>
-        </body>
+        <SupabaseProvider>
+          <body className="antialiased bg-background text-foreground font-sans">
+            <div className="min-h-screen flex flex-col">
+              <Navbar />
+              <main className="flex-grow container mx-auto px-4 py-8">
+                {children}
+              </main>
+            </div>
+          </body>
+        </SupabaseProvider>
       </ThemeProvider>
     </html>
   );
