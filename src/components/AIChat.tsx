@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import React, { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -26,6 +25,13 @@ export function AIChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedMeals, setGeneratedMeals] = useState<Meal[]>([]);
   const [showDishSwiper, setShowDishSwiper] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+    }
+  }, [messages, showDishSwiper]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,8 +54,6 @@ export function AIChat() {
 
         // Generate mock meals
         const mockMeals = generateMockMeals(20);
-        console.log("🚀 | setTimeout | mockMeals:", mockMeals);
-
         setGeneratedMeals(mockMeals);
         setShowDishSwiper(true);
       }, 2000);
@@ -58,7 +62,6 @@ export function AIChat() {
 
   const handleDishSwiperComplete = (favorites: Meal[]) => {
     setShowDishSwiper(false);
-    // Here you would typically save the favorites to the user's profile
     console.log("Favorite dishes:", favorites);
     setMessages((prev) => [
       ...prev,
@@ -70,25 +73,25 @@ export function AIChat() {
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardContent className="p-6">
-        <ScrollArea className="h-[500px]">
+    <div className="flex flex-col h-full">
+      <ScrollArea className="flex-grow" ref={scrollAreaRef}>
+        <div className="space-y-4 p-4">
           {messages.map((message, index) => (
             <div
               key={index}
-              className={`mb-4 ${
-                message.role === "user" ? "text-right" : "text-left"
+              className={`flex ${
+                message.role === "user" ? "justify-end" : "justify-start"
               }`}
             >
-              <span
-                className={`inline-block p-2 rounded-lg ${
+              <div
+                className={`max-w-[80%] p-2 rounded-lg ${
                   message.role === "user"
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted"
                 }`}
               >
                 {message.content}
-              </span>
+              </div>
             </div>
           ))}
           {isLoading && (
@@ -104,10 +107,10 @@ export function AIChat() {
               />
             </div>
           )}
-        </ScrollArea>
-      </CardContent>
-      <CardFooter>
-        <form onSubmit={handleSubmit} className="flex w-full space-x-2">
+        </div>
+      </ScrollArea>
+      <div className="bg-background p-4 border-t">
+        <form onSubmit={handleSubmit} className="flex space-x-2">
           <Input
             type="text"
             value={input}
@@ -117,7 +120,7 @@ export function AIChat() {
           />
           <Button type="submit">Send</Button>
         </form>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }

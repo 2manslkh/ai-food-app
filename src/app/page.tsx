@@ -11,7 +11,7 @@ export default function Home() {
   return (
     <>
       {user ? (
-        <div className="container mx-auto px-2 py-2">
+        <div className="h-full">
           <AIChat />
         </div>
       ) : (
