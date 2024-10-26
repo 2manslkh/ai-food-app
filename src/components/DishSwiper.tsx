@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Meal } from "@/types";
+import { MealCard } from "./MealCard";
+import { X, Heart } from "lucide-react";
 
 interface DishSwiperProps {
   dishes: Meal[];
@@ -39,22 +40,19 @@ export function DishSwiper({ dishes, onComplete }: DishSwiperProps) {
 
   return (
     <div className="flex flex-col items-center">
-      <h2 className="text-2xl font-bold mb-4">Choose Your Favorite Dishes</h2>
       <p className="mb-4">
         Swipe or click to like/dislike ({currentIndex + 1}/{dishes.length})
       </p>
-      <Card className="w-80 h-96 mb-4">
-        <CardContent className="flex flex-col justify-between h-full p-4">
-          <h3 className="text-xl font-semibold">{currentDish.name}</h3>
-          <p>{currentDish.type}</p>
-          {/* Add more dish details or an image here */}
-        </CardContent>
-      </Card>
-      <div className="flex space-x-4">
-        <Button onClick={handleDislike} variant="outline">
-          Dislike
-        </Button>
-        <Button onClick={handleLike}>Like</Button>
+      <div className="relative w-full mb-4">
+        <MealCard meal={currentDish} />
+        <div className="flex space-x-4 absolute bottom-4 right-4">
+          <Button onClick={handleDislike} variant="outline" size="icon">
+            <X className="h-4 w-4" />
+          </Button>
+          <Button onClick={handleLike} size="icon">
+            <Heart className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );
