@@ -4,13 +4,11 @@ export interface Meal {
     name: string;
     type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
     recipe: Recipe;
-    servingSize: number;
     nutrition: NutritionInfo;
+    image: string;
 }
 
 export interface Recipe {
-    id: string;
-    name: string;
     ingredients: string[];
     instructions: string[];
 }
@@ -20,8 +18,8 @@ export interface NutritionInfo {
     protein: number;
     carbs: number;
     fats: number;
-    fiber: number;
-    sugar: number;
+    fiber?: number;
+    sugar?: number;
 }
 
 // Day and Meal Plan types
@@ -32,13 +30,7 @@ export interface MealDay {
 }
 
 export interface MealPlan {
-    id: string;
-    userId: string;
-    startDate: Date;
-    endDate: Date;
     days: MealDay[];
-    nutritionSummary: NutritionInfo;
-    shoppingList: ShoppingList;
 }
 
 // Shopping List types
@@ -69,4 +61,10 @@ export interface User {
     name: string;
     email: string;
     preferences: UserPreferences;
+}
+
+// Message type for chat
+export interface Message {
+    role: string;
+    content: string;
 }

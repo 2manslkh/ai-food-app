@@ -1,34 +1,26 @@
-import React from "react";
-import Layout from "@/components/Layout";
-import { MealPlanDisplay } from "@/components/MealPlanDisplay";
-import { MealPlan } from "@/types";
+import { MealPlan, Meal } from '@/types';
 
-// This is a mock meal plan. In a real application, you would fetch this data from your API.
-const mockMealPlan: MealPlan = {
+export const mockMealPlan: MealPlan = {
   days: [
     {
       date: new Date(),
       meals: [
         {
-          id: "1",
+          id: '1',
           name: "Oatmeal with Berries",
           type: "breakfast",
           recipe: {
             ingredients: ["Oats", "Milk", "Mixed berries", "Honey"],
-            instructions: ["Cook oats with milk", "Top with berries and honey"],
+            instructions: [
+              "Cook oats with milk",
+              "Top with berries and honey",
+            ],
           },
-          nutrition: {
-            calories: 300,
-            protein: 10,
-            carbs: 50,
-            fats: 5,
-            fiber: 5,
-            sugar: 10,
-          },
+          nutrition: { calories: 300, protein: 10, carbs: 50, fats: 5 },
           image: "/oatmeal-with-berries.webp",
         },
         {
-          id: "2",
+          id: '2',
           name: "Grilled Chicken Salad",
           type: "lunch",
           recipe: {
@@ -45,18 +37,11 @@ const mockMealPlan: MealPlan = {
               "Dress with olive oil",
             ],
           },
-          nutrition: {
-            calories: 400,
-            protein: 30,
-            carbs: 20,
-            fats: 15,
-            fiber: 5,
-            sugar: 5,
-          },
+          nutrition: { calories: 400, protein: 30, carbs: 20, fats: 15 },
           image: "/grilled-chicken-salad.webp",
         },
         {
-          id: "3",
+          id: '3',
           name: "Salmon with Roasted Vegetables",
           type: "dinner",
           recipe: {
@@ -73,14 +58,7 @@ const mockMealPlan: MealPlan = {
               "Serve with lemon",
             ],
           },
-          nutrition: {
-            calories: 500,
-            protein: 35,
-            carbs: 30,
-            fats: 25,
-            fiber: 8,
-            sugar: 5,
-          },
+          nutrition: { calories: 500, protein: 35, carbs: 30, fats: 25 },
           image: "/salmon-with-roasted-vegetables.webp",
         },
       ],
@@ -90,18 +68,23 @@ const mockMealPlan: MealPlan = {
         carbs: 100,
         fats: 45,
         fiber: 18,
-        sugar: 20,
-      },
+        sugar: 20
+      }
     },
   ],
 };
 
-const MealPlanPage: React.FC = () => {
-  return (
-    <div>
-      <MealPlanDisplay mealPlan={mockMealPlan} />
-    </div>
-  );
-};
+export function generateMockMeals(count: number): Meal[] {
+  const allMeals = mockMealPlan.days.flatMap(day => day.meals);
+  const mockMeals: Meal[] = [];
 
-export default MealPlanPage;
+  for (let i = 0; i < count; i++) {
+    const randomMeal = allMeals[Math.floor(Math.random() * allMeals.length)];
+    mockMeals.push({
+      ...randomMeal,
+      id: `meal-${i + 1}`,
+    });
+  }
+
+  return mockMeals;
+}
