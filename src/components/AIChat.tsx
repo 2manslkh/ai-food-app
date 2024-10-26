@@ -41,7 +41,7 @@ interface MealPlan {
   }[];
 }
 
-const AIChat: React.FC = () => {
+export const AIChat: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -146,7 +146,7 @@ const AIChat: React.FC = () => {
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
-        <CardTitle>AI Meal Planner</CardTitle>
+        <CardTitle className="hidden">AI Meal Planner</CardTitle>
       </CardHeader>
       <CardContent>
         {!mealPlan && !isLoading && (
@@ -182,9 +182,9 @@ const AIChat: React.FC = () => {
           </ScrollArea>
         )}
         {isLoading && (
-          <div className="flex flex-col items-center justify-center h-[400px]">
+          <div className="flex flex-col items-center justify-center text-center h-[400px]">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mb-4"></div>
-            <p className="text-lg font-semibold">
+            <p className="text-lg font-semibold w-full">
               Generating your meal plan...
             </p>
           </div>
@@ -248,5 +248,3 @@ const AIChat: React.FC = () => {
     </Card>
   );
 };
-
-export default AIChat;
