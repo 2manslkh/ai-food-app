@@ -1,9 +1,9 @@
 import React from "react";
-import Layout from "../components/Layout";
-import MealPlanDisplay from "../components/MealPlanDisplay";
+import MealPlanDisplay from "../../components/MealPlanDisplay";
+import { MealPlan } from "../../types";
 
 // This is a mock meal plan. In a real application, you would fetch this data from your API.
-const mockMealPlan = {
+const mockMealPlan: MealPlan = {
   id: "1",
   userId: "1",
   startDate: new Date(),
@@ -82,7 +82,6 @@ const mockMealPlan = {
         sugar: 20,
       },
     },
-    // Add more days here...
   ],
   nutritionSummary: {
     calories: 8400,
@@ -95,13 +94,11 @@ const mockMealPlan = {
   shoppingList: { items: [], categories: {} },
 };
 
-const MealPlanPage: React.FC = () => {
+export default function MealPlanPage() {
   return (
-    <Layout>
+    <>
       <h1 className="text-3xl font-bold mb-6">Your Meal Plan</h1>
       <MealPlanDisplay mealPlan={mockMealPlan} />
-    </Layout>
+    </>
   );
-};
-
-export default MealPlanPage;
+}

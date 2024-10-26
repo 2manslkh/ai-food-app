@@ -1,5 +1,5 @@
 import React from "react";
-import { MealPlan, MealDay } from "../types"; // You'll need to create this types file
+import { MealPlan, MealDay, Meal } from "../types"; // You'll need to create this types file
 
 interface MealPlanDisplayProps {
   mealPlan: MealPlan;
@@ -19,7 +19,7 @@ const MealPlanDisplay: React.FC<MealPlanDisplayProps> = ({ mealPlan }) => {
                 day: "numeric",
               })}
             </h3>
-            {day.meals.map((meal, mealIndex) => (
+            {day.meals.map((meal: Meal, mealIndex: number) => (
               <div key={mealIndex} className="mb-2">
                 <h4 className="font-medium">
                   {meal.type.charAt(0).toUpperCase() + meal.type.slice(1)}
