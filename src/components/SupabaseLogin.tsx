@@ -12,7 +12,7 @@ export function SupabaseLogin() {
   const [message, setMessage] = useState("");
   const [authChecking, setAuthChecking] = useState(true);
   const { supabase, user } = useSupabase();
-  const [emailLogin, setEmailLogin] = useState(false);
+  const [emailLogin] = useState(false);
 
   useEffect(() => {
     const checkUser = async () => {

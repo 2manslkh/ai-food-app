@@ -5,9 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
+import { Component as PieChart } from "@/components/ui/pie-chart";
 import { Meal } from "@/types";
 import { MealCard } from "./MealCard";
+import { Progress } from "@/components/ui/progress";
+import { ChartConfig, ChartContainer } from "@/components/ui/chart";
+import { Bar, BarChart } from "recharts";
 
 interface NutritionTarget {
   calories: number;
@@ -53,13 +56,6 @@ export function WeeklyMealPlanner() {
   const handleSubmitNutrition = (e: React.FormEvent) => {
     e.preventDefault();
     setShowPlanner(true);
-  };
-
-  const addMealToDay = (day: string, meal: Meal) => {
-    setWeeklyPlan((prev) => ({
-      ...prev,
-      [day]: [...prev[day], meal],
-    }));
   };
 
   const calculateDailyNutrition = (meals: Meal[]): DailyNutrition => {
@@ -109,6 +105,16 @@ export function WeeklyMealPlanner() {
     );
   };
 
+  const createNutrientData = (nutrition: DailyNutrition) => [
+    {
+      name: "protein",
+      value: nutrition.protein,
+      fill: chartConfig.protein.color,
+    },
+    { name: "carbs", value: nutrition.carbs, fill: chartConfig.carbs.color },
+    { name: "fats", value: nutrition.fats, fill: chartConfig.fats.color },
+  ];
+
   const renderNutrientBar = (
     current: number,
     target: number,
@@ -117,6 +123,12 @@ export function WeeklyMealPlanner() {
     const percentage = Math.min((current / target) * 100, 100);
     return <Progress value={percentage} className={`w-8 h-2 ${color}`} />;
   };
+
+  const createChartData = (nutrition: DailyNutrition) => [
+    { name: "protein", value: nutrition.protein, fill: "hsl(var(--chart-1))" },
+    { name: "carbs", value: nutrition.carbs, fill: "hsl(var(--chart-2))" },
+    { name: "fats", value: nutrition.fats, fill: "hsl(var(--chart-3))" },
+  ];
 
   if (!showPlanner) {
     return (
@@ -175,17 +187,12 @@ export function WeeklyMealPlanner() {
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Your Daily Nutrition Targets</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p>Calories: {nutritionTarget.calories} kcal</p>
-          <p>Protein: {nutritionTarget.protein}g</p>
-          <p>Carbs: {nutritionTarget.carbs}g</p>
-          <p>Fats: {nutritionTarget.fats}g</p>
-        </CardContent>
-      </Card>
+      <PieChart data={createChartData(nutritionTarget)} />
+      <div>
+        <p>Protein: {nutritionTarget.protein}g</p>
+        <p>Carbs: {nutritionTarget.carbs}g</p>
+        <p>Fats: {nutritionTarget.fats}g</p>
+      </div>
 
       {daysOfWeek.map((day) => {
         const dailyNutrition = calculateDailyNutrition(weeklyPlan[day]);
@@ -197,17 +204,17 @@ export function WeeklyMealPlanner() {
                 {renderNutrientBar(
                   dailyNutrition.protein,
                   nutritionTarget.protein,
-                  "bg-blue-500"
+                  "bg-[hsl(var(--chart-1))]"
                 )}
                 {renderNutrientBar(
                   dailyNutrition.carbs,
                   nutritionTarget.carbs,
-                  "bg-yellow-500"
+                  "bg-[hsl(var(--chart-2))]"
                 )}
                 {renderNutrientBar(
                   dailyNutrition.fats,
                   nutritionTarget.fats,
-                  "bg-red-500"
+                  "bg-[hsl(var(--chart-3))]"
                 )}
                 <span className="text-xs font-medium">
                   {dailyNutrition.calories} kcal
