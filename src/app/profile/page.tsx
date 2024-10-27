@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useSupabase } from "@/components/SupabaseProvider";
+import { useSupabase } from "@/components/providers/SupabaseProvider";
 import { Button } from "@/components/ui/button";
 
 export default function ProfilePage() {

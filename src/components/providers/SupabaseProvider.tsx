@@ -1,17 +1,17 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
-import { Session, User } from "@supabase/supabase-js";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
+import { Session, User } from "@supabase/supabase-js";
 
-type SupabaseContext = {
+type SupabaseContextType = {
   supabase: ReturnType<typeof createClient>;
   session: Session | null;
   user: User | null;
 };
 
-const Context = createContext<SupabaseContext | undefined>(undefined);
+const Context = createContext<SupabaseContextType | undefined>(undefined);
 
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [supabase] = useState(() => createClient());
@@ -33,7 +33,6 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, newSession) => {
-      console.log("onAuthStateChange", event, newSession);
       setSession(newSession);
       setUser(newSession?.user ?? null);
       router.refresh();

@@ -2,9 +2,9 @@ import React from "react";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { Navbar } from "../components/Navbar";
-import { ThemeProvider } from "../components/ThemeProvider";
-import { SupabaseProvider } from "@/components/SupabaseProvider";
+import { Navbar } from "../components/navigation/Navbar";
+import { ThemeProvider } from "../components/providers/ThemeProvider";
+import { Providers } from "@/components/Providers";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -22,6 +22,8 @@ export const metadata: Metadata = {
   description: "Plan your meals with AI assistance",
 };
 
+// Create a client
+
 export default function RootLayout({
   children,
 }: {
@@ -30,14 +32,14 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <ThemeProvider>
-        <SupabaseProvider>
+        <Providers>
           <body className="antialiased bg-background text-foreground font-sans">
             <div className="flex flex-col h-screen">
               <Navbar />
               <main className="flex-grow">{children}</main>
             </div>
           </body>
-        </SupabaseProvider>
+        </Providers>
       </ThemeProvider>
     </html>
   );

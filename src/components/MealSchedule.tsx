@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useSupabase } from "./SupabaseProvider";
-import { AIChat } from "./AIChat";
+import { useSupabase } from "./providers/SupabaseProvider";
+import { AIChat } from "./chat/AIChat";
 import { fetchMeals, Meal } from "@/lib/api";
 
 export function MealSchedule() {

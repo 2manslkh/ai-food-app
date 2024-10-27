@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { DishSwiper } from "./DishSwiper";
+import { DishSwiper } from "../DishSwiper";
 import { Meal } from "@/types";
 import { generateMockMeals } from "@/lib/mocks";
 

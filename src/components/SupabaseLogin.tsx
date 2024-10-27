@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSupabase } from "./SupabaseProvider";
+import { useSupabase } from "./providers/SupabaseProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export function SupabaseLogin() {
   const [loading, setLoading] = useState(false);
@@ -13,6 +14,7 @@ export function SupabaseLogin() {
   const [authChecking, setAuthChecking] = useState(true);
   const { supabase, user } = useSupabase();
   const [emailLogin] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const checkUser = async () => {
@@ -63,6 +65,28 @@ export function SupabaseLogin() {
     } catch (error) {
       console.error("Error logging in with Google:", error);
       setMessage("Error logging in with Google. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAnonymousLogin = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.auth.signInAnonymously();
+      if (error) {
+        console.error("Detailed error:", error);
+        throw error;
+      }
+      console.log("Signed in anonymously:", data);
+      router.push("/"); // Redirect to dashboard or main app page
+    } catch (error) {
+      console.error("Error signing in anonymously:", error);
+      if (error instanceof Error) {
+        setMessage(`Failed to sign in anonymously: ${error.message}`);
+      } else {
+        setMessage("Failed to sign in anonymously. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -123,7 +147,7 @@ export function SupabaseLogin() {
       <button
         onClick={handleGoogleLogin}
         disabled={loading}
-        className="w-full flex items-center justify-center"
+        className="w-full flex items-center justify-center mb-4"
       >
         {loading ? (
           "Loading..."
@@ -139,7 +163,16 @@ export function SupabaseLogin() {
           </>
         )}
       </button>
-      {message && <p className="text-sm text-center text-red-500">{message}</p>}
+      <Button
+        onClick={handleAnonymousLogin}
+        disabled={loading}
+        className="w-full"
+      >
+        {loading ? "Loading..." : "Continue as Guest"}
+      </Button>
+      {message && (
+        <p className="text-sm text-center text-red-500 mt-4">{message}</p>
+      )}
     </>
   );
 }

@@ -1,17 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PieChartComponent as PieChart } from "@/components/ui/pie-chart";
 import { Meal } from "@/types";
-import { MealCard } from "./MealCard";
 import { Progress } from "@/components/ui/progress";
 import { AddMealDialog } from "./AddMealDialog";
 import { mockMeals } from "@/lib/mocks";
 import { MealCardCompact } from "./MealCardCompact";
+import { useCreateMealPlan, useFetchMealPlans } from "@/hooks/useApi";
+import { useUserId } from "@/hooks/useUserId";
 
 interface NutritionTarget {
   calories: number;
@@ -38,6 +39,12 @@ const daysOfWeek = [
 ];
 
 export function WeeklyMealPlanner() {
+  const today = new Date();
+  const oneWeekFromNow = new Date(today);
+  oneWeekFromNow.setDate(oneWeekFromNow.getDate() + 7);
+
+  const formatDate = (date: Date) => date.toISOString().split("T")[0];
+
   const [nutritionTarget, setNutritionTarget] = useState<NutritionTarget>({
     calories: 2000,
     protein: 150,
@@ -51,17 +58,45 @@ export function WeeklyMealPlanner() {
   const [isAddMealDialogOpen, setIsAddMealDialogOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
+  // New state for meal plan details
+  const [mealPlanName, setMealPlanName] = useState("");
+  const [startDate, setStartDate] = useState(formatDate(today));
+  const [endDate, setEndDate] = useState(formatDate(oneWeekFromNow));
+
   const favoriteMeals: Meal[] = mockMeals;
+
+  const userId = useUserId();
+  const createMealPlanMutation = useCreateMealPlan();
+  const { data: mealPlans, isLoading, error } = useFetchMealPlans();
 
   const handleNutritionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setNutritionTarget((prev) => ({ ...prev, [name]: parseInt(value) || 0 }));
   };
 
-  const handleSubmitNutrition = (e: React.FormEvent) => {
-    e.preventDefault();
-    setShowPlanner(true);
-  };
+  const handleCreateMealPlan = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!mealPlanName || !startDate || !endDate || !userId) {
+        alert("Please fill in all fields and ensure you're logged in");
+        return;
+      }
+
+      try {
+        await createMealPlanMutation.mutateAsync({
+          name: mealPlanName,
+          startDate,
+          endDate,
+        });
+        console.log("Meal plan created successfully");
+        setShowPlanner(true);
+      } catch (error) {
+        console.error("Failed to create meal plan:", error);
+        alert("Failed to create meal plan");
+      }
+    },
+    [mealPlanName, startDate, endDate, userId, createMealPlanMutation]
+  );
 
   const calculateDailyNutrition = (meals: Meal[]): DailyNutrition => {
     return meals.reduce(
@@ -157,55 +192,53 @@ export function WeeklyMealPlanner() {
     }
   };
 
+  const handleSaveMealPlan = () => {
+    // TODO: Implement the logic to save the meal plan
+    console.log("Saving meal plan:", weeklyPlan);
+    // You can add an API call here to save the meal plan to a backend
+  };
+
   if (!showPlanner) {
     return (
       <Card className="w-full max-w-md mx-auto">
         <CardHeader>
-          <CardTitle>Set Your Daily Nutrition Targets</CardTitle>
+          <CardTitle>Create New Meal Plan</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmitNutrition} className="space-y-4">
+          <form onSubmit={handleCreateMealPlan} className="space-y-4">
             <div>
-              <Label htmlFor="calories">Calories</Label>
+              <Label htmlFor="mealPlanName">Meal Plan Name</Label>
               <Input
-                id="calories"
-                name="calories"
-                type="number"
-                value={nutritionTarget.calories}
-                onChange={handleNutritionChange}
+                id="mealPlanName"
+                value={mealPlanName}
+                onChange={(e) => setMealPlanName(e.target.value)}
+                required
               />
             </div>
             <div>
-              <Label htmlFor="protein">Protein (g)</Label>
+              <Label htmlFor="startDate">Start Date</Label>
               <Input
-                id="protein"
-                name="protein"
-                type="number"
-                value={nutritionTarget.protein}
-                onChange={handleNutritionChange}
+                id="startDate"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                required
               />
             </div>
             <div>
-              <Label htmlFor="carbs">Carbs (g)</Label>
+              <Label htmlFor="endDate">End Date</Label>
               <Input
-                id="carbs"
-                name="carbs"
-                type="number"
-                value={nutritionTarget.carbs}
-                onChange={handleNutritionChange}
+                id="endDate"
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                required
               />
             </div>
-            <div>
-              <Label htmlFor="fats">Fats (g)</Label>
-              <Input
-                id="fats"
-                name="fats"
-                type="number"
-                value={nutritionTarget.fats}
-                onChange={handleNutritionChange}
-              />
-            </div>
-            <Button type="submit">Set Targets</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Creating..." : "Create New Meal Plan"}
+            </Button>
+            {error && <p className="text-red-500 text-sm">{error.message}</p>}
           </form>
         </CardContent>
       </Card>
@@ -220,7 +253,7 @@ export function WeeklyMealPlanner() {
         const dailyNutrition = calculateDailyNutrition(weeklyPlan[day]);
         return (
           <Card key={day}>
-            <CardHeader className="flex flex-row items-center justify-between py-2 pr-2">
+            <CardHeader className="flex flex-row items-center justify-between py-2 pr-2 space-y-0">
               <CardTitle className="text-lg">{day}</CardTitle>
               <div className="flex items-center space-x-2">
                 {renderNutrientBar(
@@ -266,6 +299,10 @@ export function WeeklyMealPlanner() {
         onAddMeals={handleAddMeals}
         favoriteMeals={favoriteMeals}
       />
+
+      <Button className="w-full" onClick={handleSaveMealPlan}>
+        Save Meal Plan
+      </Button>
     </div>
   );
 }
