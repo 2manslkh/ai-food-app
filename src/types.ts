@@ -95,4 +95,9 @@ export interface Meal {
   protein: number;
   carbs: number;
   fats: number;
+  name: string;
+  type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  recipe: Recipe;
+  nutrition: NutritionInfo;
+  image: string;
 }
