@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DishSwiper } from "../DishSwiper";
-import { Meal } from "@/types";
+import { Meal } from "@/types/types";
 import { generateMockMeals } from "@/lib/mocks";
 
 interface Message {

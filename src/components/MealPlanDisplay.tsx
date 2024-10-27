@@ -1,5 +1,5 @@
 import React from "react";
-import { MealPlan, MealDay, Meal } from "@/types";
+import { MealPlan, MealDay, Meal } from "@/types/types";
 import { MealCard } from "./MealCard";
 
 interface MealPlanDisplayProps {

@@ -1,4 +1,4 @@
-import { MealPlan, Meal } from '@/types';
+import { MealPlan, Meal } from '@/types/types';
 
 
 export const mockMealPlan: MealPlan = {

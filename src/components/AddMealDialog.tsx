@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Meal } from "@/types";
+import { Meal } from "@/types/types";
 import { MealCardCompact } from "./MealCardCompact";
 
 interface AddMealDialogProps {

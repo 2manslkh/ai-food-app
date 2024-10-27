@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Meal } from "@/types";
+import { Meal } from "@/types/types";
 import { MealCard } from "./MealCard";
 import { X, Heart } from "lucide-react";
 
