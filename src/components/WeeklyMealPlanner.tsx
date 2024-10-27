@@ -9,6 +9,8 @@ import { PieChartComponent as PieChart } from "@/components/ui/pie-chart";
 import { Meal } from "@/types";
 import { MealCard } from "./MealCard";
 import { Progress } from "@/components/ui/progress";
+import { AddMealDialog } from "./AddMealDialog";
+import { mockMeals } from "@/lib/mocks";
 
 interface NutritionTarget {
   calories: number;
@@ -45,6 +47,10 @@ export function WeeklyMealPlanner() {
   const [weeklyPlan, setWeeklyPlan] = useState<{ [key: string]: Meal[] }>(
     daysOfWeek.reduce((acc, day) => ({ ...acc, [day]: [] }), {})
   );
+  const [isAddMealDialogOpen, setIsAddMealDialogOpen] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+
+  const favoriteMeals: Meal[] = mockMeals;
 
   const handleNutritionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -116,10 +122,17 @@ export function WeeklyMealPlanner() {
   const renderNutrientBar = (
     current: number,
     target: number,
-    color: string
+    color: string,
+    fillColor: string
   ) => {
     const percentage = Math.min((current / target) * 100, 100);
-    return <Progress value={percentage} className={`w-8 h-2 ${color}`} />;
+    return (
+      <Progress
+        value={percentage}
+        className={`w-8 h-2 ${color}`}
+        fillColor={fillColor}
+      />
+    );
   };
 
   const createChartData = (nutrition: DailyNutrition) => [
@@ -127,6 +140,21 @@ export function WeeklyMealPlanner() {
     { name: "Carbs", value: nutrition.carbs, fill: "hsl(var(--chart-2))" },
     { name: "Fats", value: nutrition.fats, fill: "hsl(var(--chart-3))" },
   ];
+
+  const handleAddMealClick = (day: string) => {
+    setSelectedDay(day);
+    setIsAddMealDialogOpen(true);
+  };
+
+  const handleAddMeal = (meal: Meal) => {
+    if (selectedDay) {
+      setWeeklyPlan((prev) => ({
+        ...prev,
+        [selectedDay]: [...prev[selectedDay], meal],
+      }));
+      setIsAddMealDialogOpen(false);
+    }
+  };
 
   if (!showPlanner) {
     return (
@@ -186,11 +214,6 @@ export function WeeklyMealPlanner() {
   return (
     <div className="space-y-4">
       <PieChart data={createChartData(nutritionTarget)} />
-      <div>
-        <p>Protein: {nutritionTarget.protein}g</p>
-        <p>Carbs: {nutritionTarget.carbs}g</p>
-        <p>Fats: {nutritionTarget.fats}g</p>
-      </div>
 
       {daysOfWeek.map((day) => {
         const dailyNutrition = calculateDailyNutrition(weeklyPlan[day]);
@@ -202,17 +225,20 @@ export function WeeklyMealPlanner() {
                 {renderNutrientBar(
                   dailyNutrition.protein,
                   nutritionTarget.protein,
-                  "bg-[hsl(var(--chart-1))]"
+                  "bg-[hsl(var(--chart-bg-1))]",
+                  "hsl(var(--chart-1))"
                 )}
                 {renderNutrientBar(
                   dailyNutrition.carbs,
                   nutritionTarget.carbs,
-                  "bg-[hsl(var(--chart-2))]"
+                  "bg-[hsl(var(--chart-bg-2))]",
+                  "hsl(var(--chart-2))"
                 )}
                 {renderNutrientBar(
                   dailyNutrition.fats,
                   nutritionTarget.fats,
-                  "bg-[hsl(var(--chart-3))]"
+                  "bg-[hsl(var(--chart-bg-3))]",
+                  "hsl(var(--chart-3))"
                 )}
                 <span className="text-xs font-medium">
                   {dailyNutrition.calories} kcal
@@ -223,17 +249,18 @@ export function WeeklyMealPlanner() {
               {weeklyPlan[day].map((meal, index) => (
                 <MealCard key={index} meal={meal} />
               ))}
-              <Button
-                onClick={() => {
-                  /* TODO: Implement add meal functionality */
-                }}
-              >
-                Add Meal
-              </Button>
+              <Button onClick={() => handleAddMealClick(day)}>Add Meal</Button>
             </CardContent>
           </Card>
         );
       })}
+
+      <AddMealDialog
+        isOpen={isAddMealDialogOpen}
+        onClose={() => setIsAddMealDialogOpen(false)}
+        onAddMeal={handleAddMeal}
+        favoriteMeals={favoriteMeals}
+      />
     </div>
   );
 }

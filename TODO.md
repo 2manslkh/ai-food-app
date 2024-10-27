@@ -1,6 +1,7 @@
 # TODO
 
-- [ ] feat: nutrition breakdown chart
+- [x] feat: nutrition breakdown chart
+- [ ] feat: allow user to edit nutrition targets
 - [ ] feat: weekly meal plan
 - [ ] Cache images in supabase
 - [ ] Write database schema
