@@ -7,8 +7,6 @@ import { useFetchMealPlans } from "@/hooks/useApi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-// This is a mock meal plan. In a real application, you would fetch this data from your API.
-
 const MealPlanPage: React.FC = () => {
   const { data: mealPlans, isLoading, error } = useFetchMealPlans();
   const [showPlanner, setShowPlanner] = React.useState(false);
@@ -54,7 +52,7 @@ const MealPlanPage: React.FC = () => {
               ))}
             </div>
           ) : (
-            <p>You haven't created any meal plans yet.</p>
+            <p>You haven&apos;t created any meal plans yet.</p>
           )}
           <Button className="mt-4" onClick={() => setShowPlanner(true)}>
             Create New Meal Plan

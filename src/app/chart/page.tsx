@@ -10,21 +10,6 @@ const dataPie = [
   { name: "Fats", value: 300, fill: "hsl(var(--chart-3))" },
 ];
 
-const chartConfig = {
-  protein: {
-    label: "Protein",
-    color: "hsl(var(--chart-1))",
-  },
-  carbs: {
-    label: "Carbs",
-    color: "hsl(var(--chart-2))",
-  },
-  fats: {
-    label: "Fats",
-    color: "hsl(var(--chart-3))",
-  },
-};
-
 const PieChartPage: React.FC = () => {
   console.log("🚀 | dataPie:", dataPie);
 

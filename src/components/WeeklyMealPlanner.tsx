@@ -45,7 +45,7 @@ export function WeeklyMealPlanner() {
 
   const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
-  const [nutritionTarget, setNutritionTarget] = useState<NutritionTarget>({
+  const [nutritionTarget] = useState<NutritionTarget>({
     calories: 2000,
     protein: 150,
     carbs: 200,
@@ -67,12 +67,7 @@ export function WeeklyMealPlanner() {
 
   const userId = useUserId();
   const createMealPlanMutation = useCreateMealPlan();
-  const { data: mealPlans, isLoading, error } = useFetchMealPlans();
-
-  const handleNutritionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setNutritionTarget((prev) => ({ ...prev, [name]: parseInt(value) || 0 }));
-  };
+  const { isLoading, error } = useFetchMealPlans();
 
   const handleCreateMealPlan = useCallback(
     async (e: React.FormEvent) => {
@@ -109,51 +104,6 @@ export function WeeklyMealPlanner() {
       { calories: 0, protein: 0, carbs: 0, fats: 0 }
     );
   };
-
-  const renderCompactProgressBar = (
-    current: number,
-    target: number,
-    label: string
-  ) => {
-    const percentage = Math.min((current / target) * 100, 100);
-    return (
-      <div className="flex items-center space-x-1">
-        <span className="text-xs font-medium w-8">{label[0]}</span>
-        <Progress value={percentage} className="w-8 h-2" />
-        <span className="text-xs font-medium w-8">
-          {current}/{target}
-        </span>
-      </div>
-    );
-  };
-
-  const renderNutrientIndicator = (
-    current: number,
-    target: number,
-    label: string,
-    color: string
-  ) => {
-    const percentage = (current / target) * 100;
-    return (
-      <div className="flex items-center space-x-1">
-        <span className="text-xs font-medium">{label[0]}</span>
-        <div
-          className={`w-2 h-2 rounded-full ${color}`}
-          style={{ opacity: Math.min(percentage / 100, 1) }}
-        />
-      </div>
-    );
-  };
-
-  const createNutrientData = (nutrition: DailyNutrition) => [
-    {
-      name: "Protein",
-      value: nutrition.protein,
-      fill: "hsl(var(--chart-1))",
-    },
-    { name: "Carbs", value: nutrition.carbs, fill: "hsl(var(--chart-2))" },
-    { name: "Fats", value: nutrition.fats, fill: "hsl(var(--chart-3))" },
-  ];
 
   const renderNutrientBar = (
     current: number,
