@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { MealPlan, MealDay, Meal } from '@/lib/api';
 import { useUserId } from './useUserId';
 import { useSupabase } from '@/components/providers/SupabaseProvider';
+import { Meal, MealDay, MealPlan } from '@/types';
 
 // Create Meal Plan
 export function useCreateMealPlan() {
