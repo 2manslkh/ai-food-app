@@ -23,15 +23,15 @@ export interface NutritionInfo {
 }
 
 // Day and Meal Plan types
-export interface MealDay {
-    date: Date;
-    meals: Meal[];
-    nutritionSummary: NutritionInfo;
-}
+// export interface MealDay {
+//     date: Date;
+//     meals: Meal[];
+//     nutritionSummary: NutritionInfo;
+// }
 
-export interface MealPlan {
-    days: MealDay[];
-}
+// export interface MealPlan {
+//     days: MealDay[];
+// }
 
 // Shopping List types
 export interface ShoppingList {
