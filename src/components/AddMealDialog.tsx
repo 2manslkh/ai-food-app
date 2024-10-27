@@ -7,7 +7,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Meal } from "@/types";
 import { MealCardCompact } from "./MealCardCompact";
 
@@ -53,21 +52,18 @@ export function AddMealDialog({
         <DialogHeader>
           <DialogTitle>Add Meals</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="h-[400px] w-full pr-4">
-          <div className="space-y-2">
+        <ScrollArea className="h-[400px] w-full">
+          <div className="space-y-0">
             {favoriteMeals.map((meal) => (
-              <div key={meal.id} className="flex items-center space-x-2">
-                <Checkbox
-                  checked={selectedMeals.has(meal.id)}
-                  onCheckedChange={() => handleToggleMeal(meal.id)}
-                  id={`meal-${meal.id}`}
+              <div
+                key={meal.id}
+                className="cursor-pointer p-1"
+                onClick={() => handleToggleMeal(meal.id)}
+              >
+                <MealCardCompact
+                  meal={meal}
+                  isSelected={selectedMeals.has(meal.id)}
                 />
-                <label
-                  htmlFor={`meal-${meal.id}`}
-                  className="flex-grow cursor-pointer"
-                >
-                  <MealCardCompact meal={meal} />
-                </label>
               </div>
             ))}
           </div>

@@ -5,13 +5,23 @@ import { Meal } from "@/types";
 
 interface MealCardCompactProps {
   meal: Meal;
+  isSelected?: boolean;
 }
 
-export function MealCardCompact({ meal }: MealCardCompactProps) {
+export function MealCardCompact({
+  meal,
+  isSelected = false,
+}: MealCardCompactProps) {
   return (
-    <Card className="w-full overflow-hidden">
-      <div className="flex items-center">
-        <div className="relative h-20 w-20 flex-shrink-0">
+    <Card
+      className={`w-full transition-all overflow-hidden ${
+        isSelected
+          ? "shadow-[0_0_0_2px_rgba(59,130,246,0.5)] filter brightness-105"
+          : ""
+      }`}
+    >
+      <div className="flex items-center h-16">
+        <div className="relative h-16 w-16 flex-shrink-0">
           <Image
             src={meal.image}
             alt={meal.name}
@@ -19,16 +29,21 @@ export function MealCardCompact({ meal }: MealCardCompactProps) {
             objectFit="cover"
           />
         </div>
-        <CardContent className="flex-grow p-4 flex justify-between items-center">
-          <div>
-            <h3 className="font-semibold text-sm mb-1">{meal.name}</h3>
+        <CardContent className="flex-grow p-2 flex justify-between items-center">
+          <div className="overflow-hidden">
+            <h3
+              className="font-semibold text-sm mb-1 max-w-48 truncate"
+              title={meal.name}
+            >
+              {meal.name}
+            </h3>
             <div className="text-xs text-muted-foreground">
               <span>P: {meal.nutrition.protein}g</span>
               <span className="mx-1">C: {meal.nutrition.carbs}g</span>
               <span>F: {meal.nutrition.fats}g</span>
             </div>
           </div>
-          <div className="text-sm font-medium">
+          <div className="text-sm font-medium ml-2 whitespace-nowrap">
             {meal.nutrition.calories} kcal
           </div>
         </CardContent>

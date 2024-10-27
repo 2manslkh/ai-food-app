@@ -11,6 +11,7 @@ import { MealCard } from "./MealCard";
 import { Progress } from "@/components/ui/progress";
 import { AddMealDialog } from "./AddMealDialog";
 import { mockMeals } from "@/lib/mocks";
+import { MealCardCompact } from "./MealCardCompact";
 
 interface NutritionTarget {
   calories: number;
@@ -146,11 +147,11 @@ export function WeeklyMealPlanner() {
     setIsAddMealDialogOpen(true);
   };
 
-  const handleAddMeal = (meal: Meal) => {
+  const handleAddMeals = (meals: Meal[]) => {
     if (selectedDay) {
       setWeeklyPlan((prev) => ({
         ...prev,
-        [selectedDay]: [...prev[selectedDay], meal],
+        [selectedDay]: [...prev[selectedDay], ...meals],
       }));
       setIsAddMealDialogOpen(false);
     }
@@ -245,11 +246,15 @@ export function WeeklyMealPlanner() {
                 </span>
               </div>
             </CardHeader>
-            <CardContent>
-              {weeklyPlan[day].map((meal, index) => (
-                <MealCard key={index} meal={meal} />
-              ))}
-              <Button onClick={() => handleAddMealClick(day)}>Add Meal</Button>
+            <CardContent className="pr-2">
+              <div className="space-y-1">
+                {weeklyPlan[day].map((meal, index) => (
+                  <MealCardCompact key={index} meal={meal} />
+                ))}
+              </div>
+              <Button className="mt-4" onClick={() => handleAddMealClick(day)}>
+                Add Meal
+              </Button>
             </CardContent>
           </Card>
         );
@@ -258,7 +263,7 @@ export function WeeklyMealPlanner() {
       <AddMealDialog
         isOpen={isAddMealDialogOpen}
         onClose={() => setIsAddMealDialogOpen(false)}
-        onAddMeal={handleAddMeal}
+        onAddMeals={handleAddMeals}
         favoriteMeals={favoriteMeals}
       />
     </div>
