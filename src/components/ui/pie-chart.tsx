@@ -1,14 +1,8 @@
 "use client";
 
-import * as React from "react";
-import { Pie, PieChart } from "recharts";
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import React from "react";
+import { PieChart, Pie, ResponsiveContainer, Cell, Legend } from "recharts";
 
 interface ChartData {
   name: string;
@@ -20,59 +14,71 @@ interface ComponentProps {
   data: ChartData[];
 }
 
-const chartConfig = {
-  protein: {
-    label: "Protein",
-    color: "hsl(var(--chart-1))",
-  },
-  carbs: {
-    label: "Carbs",
-    color: "hsl(var(--chart-2))",
-  },
-  fats: {
-    label: "Fats",
-    color: "hsl(var(--chart-3))",
-  },
-};
-
-export function Component({ data }: ComponentProps) {
-  const total = React.useMemo(() => {
-    return data.reduce((acc, curr) => acc + curr.value, 0);
-  }, [data]);
+const RADIAN = Math.PI / 180;
+const renderCustomizedLabel = ({
+  cx,
+  cy,
+  midAngle,
+  innerRadius,
+  outerRadius,
+  value,
+}: any) => {
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Nutrition Breakdown</CardTitle>
+    <text
+      x={x}
+      y={y}
+      fill="white"
+      textAnchor="middle"
+      dominantBaseline="central"
+      style={{ fontSize: "12px", fontWeight: "bold" }}
+    >
+      {`${value}g`}
+    </text>
+  );
+};
+
+export function PieChartComponent({ data }: ComponentProps) {
+  return (
+    <Card className="w-full max-h-[300px]">
+      <CardHeader className="pb-0">
+        <CardTitle>Daily Nutrition Breakdown</CardTitle>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig} className="w-[300px] h-[300px]">
+      <CardContent className="w-full h-[300px] flex justify-center items-center">
+        <ResponsiveContainer width="100%" height="100%">
           <PieChart>
-            <ChartTooltip
-              content={({ payload }) => {
-                if (payload && payload[0]) {
-                  return (
-                    <ChartTooltipContent
-                      label={`${payload[0].name}: ${payload[0].value}g`}
-                    />
-                  );
-                }
-                return null;
-              }}
-            />
             <Pie
               data={data}
-              width={300}
-              height={300}
               dataKey="value"
               nameKey="name"
               cx="50%"
               cy="50%"
-              innerRadius={60}
-              outerRadius={80}
+              innerRadius={50}
+              outerRadius={90}
+              paddingAngle={0}
+              strokeWidth={0}
+              startAngle={90}
+              endAngle={450}
+              labelLine={false}
+              label={renderCustomizedLabel}
+            >
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.fill} />
+              ))}
+            </Pie>
+            <Legend
+              layout="vertical"
+              verticalAlign="middle"
+              align="right"
+              wrapperStyle={{
+                paddingLeft: "20px",
+              }}
             />
           </PieChart>
-        </ChartContainer>
+        </ResponsiveContainer>
       </CardContent>
     </Card>
   );

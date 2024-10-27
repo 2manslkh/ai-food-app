@@ -5,12 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Component as PieChart } from "@/components/ui/pie-chart";
+import { PieChartComponent as PieChart } from "@/components/ui/pie-chart";
 import { Meal } from "@/types";
 import { MealCard } from "./MealCard";
 import { Progress } from "@/components/ui/progress";
-import { ChartConfig, ChartContainer } from "@/components/ui/chart";
-import { Bar, BarChart } from "recharts";
 
 interface NutritionTarget {
   calories: number;
@@ -107,12 +105,12 @@ export function WeeklyMealPlanner() {
 
   const createNutrientData = (nutrition: DailyNutrition) => [
     {
-      name: "protein",
+      name: "Protein",
       value: nutrition.protein,
-      fill: chartConfig.protein.color,
+      fill: "hsl(var(--chart-1))",
     },
-    { name: "carbs", value: nutrition.carbs, fill: chartConfig.carbs.color },
-    { name: "fats", value: nutrition.fats, fill: chartConfig.fats.color },
+    { name: "Carbs", value: nutrition.carbs, fill: "hsl(var(--chart-2))" },
+    { name: "Fats", value: nutrition.fats, fill: "hsl(var(--chart-3))" },
   ];
 
   const renderNutrientBar = (
@@ -125,9 +123,9 @@ export function WeeklyMealPlanner() {
   };
 
   const createChartData = (nutrition: DailyNutrition) => [
-    { name: "protein", value: nutrition.protein, fill: "hsl(var(--chart-1))" },
-    { name: "carbs", value: nutrition.carbs, fill: "hsl(var(--chart-2))" },
-    { name: "fats", value: nutrition.fats, fill: "hsl(var(--chart-3))" },
+    { name: "Protein", value: nutrition.protein, fill: "hsl(var(--chart-1))" },
+    { name: "Carbs", value: nutrition.carbs, fill: "hsl(var(--chart-2))" },
+    { name: "Fats", value: nutrition.fats, fill: "hsl(var(--chart-3))" },
   ];
 
   if (!showPlanner) {

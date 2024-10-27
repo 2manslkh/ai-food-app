@@ -1,13 +1,8 @@
 "use client";
 
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import React from "react";
 import { PieChart, Pie, ResponsiveContainer, Legend } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
 
 const dataPie = [
   { name: "Protein", value: 400, fill: "hsl(var(--chart-1))" },
@@ -31,26 +26,31 @@ const chartConfig = {
 };
 
 const PieChartPage: React.FC = () => {
-  const total = React.useMemo(() => {
-    return dataPie.reduce((acc, curr) => acc + curr.value, 0);
-  }, []);
+  console.log("🚀 | dataPie:", dataPie);
 
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <PieChart>
-        <Pie
-          data={dataPie}
-          dataKey="value"
-          nameKey="name"
-          cx="50%"
-          cy="50%"
-          innerRadius={60}
-          outerRadius={80}
-          label
-        />
-        <Legend />
-      </PieChart>
-    </ResponsiveContainer>
+    <Card className="w-full max-h-[300px]">
+      <CardHeader>
+        <CardTitle>Nutrition Breakdown</CardTitle>
+      </CardHeader>
+      <CardContent className="w-[300px] h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={dataPie}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              innerRadius={60}
+              outerRadius={80}
+              label
+            />
+            <Legend />
+          </PieChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
   );
 };
 
