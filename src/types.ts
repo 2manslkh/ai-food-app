@@ -74,6 +74,7 @@ export interface MealPlan {
   name: string;
   start_date: string;
   end_date: string;
+  days: MealDay[];
 }
 
 export interface MealDay {
