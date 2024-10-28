@@ -36,7 +36,11 @@ interface DailyNutrition {
 
 const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-export function WeeklyMealPlanner() {
+interface WeeklyMealPlannerProps {
+  existingPlanId?: string;
+}
+
+export function WeeklyMealPlanner({ existingPlanId }: WeeklyMealPlannerProps) {
   const today = new Date();
   const oneWeekFromNow = new Date(today);
   oneWeekFromNow.setDate(oneWeekFromNow.getDate() + 6);
@@ -49,7 +53,7 @@ export function WeeklyMealPlanner() {
     carbs: 200,
     fats: 65,
   });
-  const [showPlanner, setShowPlanner] = useState(false);
+  const [showPlanner, setShowPlanner] = useState(!!existingPlanId);
   const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPlan>(
     daysOfWeek.map((day) => ({
       id: "",
@@ -79,7 +83,7 @@ export function WeeklyMealPlanner() {
   const createMealPlanMutation = useCreateMealPlan();
   const { isLoading, error } = useFetchMealPlans();
   const saveMealPlanDaysMutation = useSaveMealPlanDays();
-  const [currentMealPlanId, setCurrentMealPlanId] = useState<string | null>(null);
+  const [currentMealPlanId, setCurrentMealPlanId] = useState<string | null>(existingPlanId || null);
 
   // Add state for tracking the current meal day ID
   const [currentMealDayId, setCurrentMealDayId] = useState<string | null>(null);
@@ -87,7 +91,6 @@ export function WeeklyMealPlanner() {
   const { data: mealPlanDays, isLoading: isLoadingMealPlanDays } =
     useFetchMealPlanDays(currentMealPlanId);
 
-  console.log("🚀 | WeeklyMealPlanner | mealPlanDays:", mealPlanDays);
   useEffect(() => {
     if (mealPlanDays) {
       setWeeklyPlan(mealPlanDays);
@@ -182,8 +185,6 @@ export function WeeklyMealPlanner() {
   };
 
   const handleSaveMealPlan = async () => {
-    console.log("🚀 | handleSaveMealPlan | currentMealPlanId:", currentMealPlanId);
-    console.log("🚀 | handleSaveMealPlan | currentMealPlanId:", weeklyPlan);
     if (!currentMealPlanId) {
       toast({
         title: "Error",
@@ -195,10 +196,12 @@ export function WeeklyMealPlanner() {
 
     try {
       console.log("🚀 | handleSaveMealPlan | currentMealPlanId:", currentMealPlanId);
-      await saveMealPlanDaysMutation.mutateAsync({
-        mealPlanId: currentMealPlanId,
-        weeklyPlan,
-      });
+      // await saveMealPlanDaysMutation.mutateAsync({
+      //   mealPlanId: currentMealPlanId,
+      //   weeklyPlan,
+      // });
+      setShowPlanner(false);
+
       toast({
         title: "Success",
         description: "Meal plan saved successfully",
