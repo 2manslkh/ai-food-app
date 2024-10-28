@@ -4,7 +4,7 @@ import OpenAI from "openai";
 import { mockGenerateMealPlanResponse } from "@/lib/mocks";
 
 const mockResponse = mockGenerateMealPlanResponse;
-const mock = true;
+const mock = false;
 // Function to generate meals
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY, // Ensure you have your OpenAI API key set in your environment variables

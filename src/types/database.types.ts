@@ -127,6 +127,7 @@ export type Database = {
       meal_days: {
         Row: {
           date: string | null
+          day_of_week: string | null
           id: string
           meal_plan_id: string | null
           total_calories: number | null
@@ -136,6 +137,7 @@ export type Database = {
         }
         Insert: {
           date?: string | null
+          day_of_week?: string | null
           id?: string
           meal_plan_id?: string | null
           total_calories?: number | null
@@ -145,6 +147,7 @@ export type Database = {
         }
         Update: {
           date?: string | null
+          day_of_week?: string | null
           id?: string
           meal_plan_id?: string | null
           total_calories?: number | null
@@ -607,6 +610,13 @@ export type Database = {
       toggle_favorite_meal: {
         Args: {
           p_recipe_id: string
+        }
+        Returns: boolean
+      }
+      update_meal_day: {
+        Args: {
+          p_meal_day_id: string
+          p_meals: Json
         }
         Returns: boolean
       }

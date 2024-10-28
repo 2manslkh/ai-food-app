@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Meal } from "@/types";
 import { MealCardCompact } from "./MealCardCompact";
-import { useAddMealsToMealDay } from "@/hooks/useApi";
+import { useUpdateMealDay } from "@/hooks/useApi";
 import { toast } from "@/hooks/use-toast";
 
 interface AddMealDialogProps {
@@ -13,6 +13,7 @@ interface AddMealDialogProps {
   onAddMeals: (meals: Meal[]) => void;
   favoriteMeals: Meal[];
   mealDayId: string;
+  currentMeals: Meal[];
 }
 
 export function AddMealDialog({
@@ -21,9 +22,11 @@ export function AddMealDialog({
   onAddMeals,
   favoriteMeals,
   mealDayId,
+  currentMeals,
 }: AddMealDialogProps) {
+  console.log("🚀 | currentMeals:", currentMeals);
   const [selectedMeals, setSelectedMeals] = useState<Set<string>>(new Set());
-  const addMealsToMealDay = useAddMealsToMealDay();
+  const updateMealDay = useUpdateMealDay();
 
   const handleToggleMeal = (mealId: string) => {
     setSelectedMeals((prev) => {
@@ -41,24 +44,28 @@ export function AddMealDialog({
     const mealsToAdd = favoriteMeals.filter((meal) => selectedMeals.has(meal.id));
 
     try {
-      await addMealsToMealDay.mutateAsync({
+      // Combine current meals with new meals
+      const updatedMeals = [...currentMeals, ...mealsToAdd];
+      console.log("🚀 | handleAddSelectedMeals | updatedMeals:", updatedMeals);
+
+      await updateMealDay.mutateAsync({
         mealDayId,
-        meals: mealsToAdd,
+        meals: updatedMeals,
       });
 
-      onAddMeals(mealsToAdd);
+      onAddMeals(updatedMeals);
       setSelectedMeals(new Set());
       onClose();
 
       toast({
         title: "Success",
-        description: "Meals added successfully",
+        description: "Meals updated successfully",
       });
     } catch (error) {
-      console.error("Failed to add meals:", error);
+      console.error("Failed to update meals:", error);
       toast({
         title: "Error",
-        description: "Failed to add meals",
+        description: "Failed to update meals",
         variant: "destructive",
       });
     }
@@ -86,11 +93,9 @@ export function AddMealDialog({
         <div className="mt-4 flex justify-end">
           <Button
             onClick={handleAddSelectedMeals}
-            disabled={selectedMeals.size === 0 || addMealsToMealDay.isPending}
+            disabled={selectedMeals.size === 0 || updateMealDay.isPending}
           >
-            {addMealsToMealDay.isPending
-              ? "Adding..."
-              : `Add Selected Meals (${selectedMeals.size})`}
+            {updateMealDay.isPending ? "Adding..." : `Add Selected Meals (${selectedMeals.size})`}
           </Button>
         </div>
       </DialogContent>

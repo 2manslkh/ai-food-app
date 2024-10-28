@@ -38,14 +38,32 @@ CREATE OR REPLACE FUNCTION create_meal_plan(
 ) RETURNS UUID AS $$
 DECLARE
     v_meal_plan_id UUID;
+    v_current_date DATE;
+    v_day_of_week TEXT;
 BEGIN
     INSERT INTO meal_plans (user_id, name, start_date, end_date)
     VALUES (p_user_id, p_name, p_start_date, p_end_date)
     RETURNING id INTO v_meal_plan_id;
 
     -- Create meal_days for each day in the meal plan
-    INSERT INTO meal_days (meal_plan_id, date)
-    SELECT v_meal_plan_id, generate_series(p_start_date, p_end_date, '1 day'::interval)::date;
+    v_current_date := p_start_date;
+    WHILE v_current_date <= p_end_date LOOP
+        -- Get day of week name
+        v_day_of_week := CASE EXTRACT(DOW FROM v_current_date)
+            WHEN 1 THEN 'Monday'
+            WHEN 2 THEN 'Tuesday'
+            WHEN 3 THEN 'Wednesday'
+            WHEN 4 THEN 'Thursday'
+            WHEN 5 THEN 'Friday'
+            WHEN 6 THEN 'Saturday'
+            WHEN 0 THEN 'Sunday'
+        END;
+
+        INSERT INTO meal_days (meal_plan_id, date, day_of_week)
+        VALUES (v_meal_plan_id, v_current_date, v_day_of_week);
+
+        v_current_date := v_current_date + INTERVAL '1 day';
+    END LOOP;
 
     RETURN v_meal_plan_id;
 END;
@@ -318,7 +336,20 @@ BEGIN
         VALUES (v_recipe_id, p_calories, p_protein, p_carbs, p_fats);
     END IF;
 
-    RETURN v_recipe_id;
+    -- Create a new meal entry
+    INSERT INTO meals (recipe_id, meal_type, serving_size, calories, protein, carbs, fats)
+    VALUES (
+        v_recipe_id,
+        p_type,
+        1,  -- default serving size
+        p_calories,
+        p_protein,
+        p_carbs,
+        p_fats
+    )
+    RETURNING id INTO v_meal_id;
+
+    RETURN v_meal_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -338,18 +369,23 @@ CREATE OR REPLACE FUNCTION handle_meal_interaction(
 DECLARE
     v_recipe_id UUID;
 BEGIN
-    -- Create or get the meal
-    v_recipe_id := create_or_get_meal(
-        p_name,
-        p_type,
-        p_instructions,
-        p_ingredients,
-        p_calories,
-        p_protein,
-        p_carbs,
-        p_fats,
-        p_image
-    );
+    -- First try to find existing recipe
+    SELECT id INTO v_recipe_id
+    FROM recipes
+    WHERE name = p_name
+    AND type = p_type
+    LIMIT 1;
+
+    -- If recipe doesn't exist, create it
+    IF v_recipe_id IS NULL THEN
+        INSERT INTO recipes (name, type, instructions, ingredients, image)
+        VALUES (p_name, p_type, p_instructions, p_ingredients, p_image)
+        RETURNING id INTO v_recipe_id;
+
+        -- Create nutrition info for the recipe
+        INSERT INTO nutrition_info (recipe_id, calories, protein, carbs, fats)
+        VALUES (v_recipe_id, p_calories, p_protein, p_carbs, p_fats);
+    END IF;
 
     -- If it's a favorite, add to user's favorites
     IF p_is_favorite THEN
@@ -592,6 +628,64 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Function to update meals in a meal day
+CREATE OR REPLACE FUNCTION update_meal_day(
+    p_meal_day_id UUID,
+    p_meals JSONB
+) RETURNS BOOLEAN AS $$
+DECLARE
+    v_user_id UUID;
+    v_meal RECORD;
+    v_recipe_id UUID;
+    v_meal_id UUID;
+BEGIN
+    -- Check if the meal day belongs to the current user's meal plan
+    SELECT mp.user_id INTO v_user_id
+    FROM meal_days md
+    JOIN meal_plans mp ON md.meal_plan_id = mp.id
+    WHERE md.id = p_meal_day_id;
+
+    IF v_user_id != auth.uid() THEN
+        RAISE EXCEPTION 'You do not have permission to modify this meal day';
+    END IF;
+
+    -- Delete existing meals for this day
+    DELETE FROM meal_day_meals
+    WHERE meal_day_id = p_meal_day_id;
+
+    -- Reset nutrition totals
+    UPDATE meal_days
+    SET total_calories = 0,
+        total_protein = 0,
+        total_carbs = 0,
+        total_fats = 0
+    WHERE id = p_meal_day_id;
+
+    -- Process each meal
+    FOR v_meal IN SELECT * FROM jsonb_array_elements(p_meals)
+    LOOP
+        -- Create a new meal entry
+        SELECT create_or_get_meal(
+            (v_meal.value->>'name')::TEXT,
+            COALESCE((v_meal.value->>'type')::TEXT, 'main'),
+            ARRAY(SELECT jsonb_array_elements_text(v_meal.value->'recipe'->'instructions')),
+            ARRAY(SELECT jsonb_array_elements_text(v_meal.value->'recipe'->'ingredients')),
+            COALESCE((v_meal.value->'nutrition'->>'calories')::INTEGER, 0),
+            COALESCE((v_meal.value->'nutrition'->>'protein')::NUMERIC, 0),
+            COALESCE((v_meal.value->'nutrition'->>'carbs')::NUMERIC, 0),
+            COALESCE((v_meal.value->'nutrition'->>'fats')::NUMERIC, 0),
+            (v_meal.value->>'image')::TEXT
+        ) INTO v_meal_id;
+
+        -- Link the meal to the meal day
+        INSERT INTO meal_day_meals (meal_day_id, meal_id)
+        VALUES (p_meal_day_id, v_meal_id);
+    END LOOP;
+
+    RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Grant execute permissions
 GRANT EXECUTE ON FUNCTION create_meal_plan(UUID, TEXT, DATE, DATE) TO authenticated;
 GRANT EXECUTE ON FUNCTION edit_meal_plan(UUID, TEXT, DATE, DATE) TO authenticated;
@@ -605,4 +699,5 @@ GRANT EXECUTE ON FUNCTION get_user_favorite_meals(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION save_meal_plan_days(UUID, JSONB) TO authenticated;
 GRANT EXECUTE ON FUNCTION add_meals_to_meal_day(UUID, JSONB) TO authenticated;
 GRANT EXECUTE ON FUNCTION get_meal_plan_days(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION update_meal_day(UUID, JSONB) TO authenticated;
 

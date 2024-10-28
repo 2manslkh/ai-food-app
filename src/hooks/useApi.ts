@@ -1,7 +1,7 @@
 import { QueryObserverResult, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useUserId } from "./useUserId";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
-import { AggregatedMeal, Meal, MealDay, MealPlan, NutritionInfo } from "@/types";
+import { AggregatedMeal, Meal, MealDay, MealPlan, NutritionInfo, WeeklyPlan } from "@/types";
 
 // Create Meal Plan
 export function useCreateMealPlan() {
@@ -252,9 +252,8 @@ export function useSaveMealPlanDays() {
       weeklyPlan,
     }: {
       mealPlanId: string;
-      weeklyPlan: { [key: string]: Meal[] };
+      weeklyPlan: WeeklyPlan;
     }) => {
-      console.log("🚀 | useSaveMealPlanDays | weeklyPlan:", weeklyPlan);
       const { data, error } = await supabase.rpc("save_meal_plan_days", {
         p_meal_plan_id: mealPlanId,
         p_days: JSON.stringify(weeklyPlan),
@@ -414,7 +413,7 @@ export function useFetchMealPlanDays(mealPlanId: string | null) {
   const { supabase } = useSupabase();
   const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-  return useQuery({
+  return useQuery<WeeklyPlan>({
     queryKey: ["mealPlanDays", mealPlanId],
     queryFn: async () => {
       if (!mealPlanId) throw new Error("No meal plan ID provided");
@@ -422,17 +421,20 @@ export function useFetchMealPlanDays(mealPlanId: string | null) {
       const { data, error } = await supabase.rpc("get_meal_plan_days", {
         p_meal_plan_id: mealPlanId,
       });
-      console.log("🚀 | queryFn: | data:", data);
 
       if (error) throw error;
 
       // Initialize empty plan with all days
       const emptyPlan = daysOfWeek.reduce(
-        (acc, day) => {
-          acc[day] = [];
-          return acc;
-        },
-        {} as { [key: string]: Meal[] }
+        (acc, day) => ({
+          ...acc,
+          [day]: {
+            meals: [],
+            dayOfWeek: day,
+            mealDayId: "",
+          },
+        }),
+        {} as WeeklyPlan
       );
 
       // If no data, return empty plan
@@ -445,15 +447,47 @@ export function useFetchMealPlanDays(mealPlanId: string | null) {
         const dayOfWeek = day.day_of_week;
         const meals = Array.isArray(day.meals) ? day.meals : [];
 
-        // Add meal day ID to each meal
-        acc[dayOfWeek] = meals.map((meal: any) => ({
-          ...meal,
-          mealDayId: day.id,
+        // Transform meals to include mealDayId
+        const transformedMeals = meals.map((meal: any) => ({
+          id: meal.id,
+          name: meal.name,
+          type: meal.type,
+          nutrition: meal.nutrition,
+          image: meal.image,
+          recipe: meal.recipe,
+          mealDayId: meal.mealDayId,
         }));
+
+        acc[dayOfWeek] = {
+          meals: transformedMeals,
+          dayOfWeek: dayOfWeek,
+          mealDayId: day.id,
+        };
 
         return acc;
       }, emptyPlan);
     },
     enabled: !!mealPlanId,
+  });
+}
+
+// Update Meal Day
+export function useUpdateMealDay() {
+  const queryClient = useQueryClient();
+  const { supabase } = useSupabase();
+
+  return useMutation({
+    mutationFn: async ({ mealDayId, meals }: { mealDayId: string; meals: Meal[] }) => {
+      const { data, error } = await supabase.rpc("update_meal_day", {
+        p_meal_day_id: mealDayId,
+        p_meals: meals,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["meals", variables.mealDayId] });
+      queryClient.invalidateQueries({ queryKey: ["mealPlanDays"] });
+    },
   });
 }

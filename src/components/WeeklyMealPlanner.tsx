@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PieChartComponent as PieChart } from "@/components/ui/pie-chart";
-import { Meal } from "@/types";
+import { Meal, WeeklyPlan } from "@/types";
 import { Progress } from "@/components/ui/progress";
 import { AddMealDialog } from "./AddMealDialog";
 import { MealCardCompact } from "./MealCardCompact";
@@ -39,7 +39,7 @@ const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Sat
 export function WeeklyMealPlanner() {
   const today = new Date();
   const oneWeekFromNow = new Date(today);
-  oneWeekFromNow.setDate(oneWeekFromNow.getDate() + 7);
+  oneWeekFromNow.setDate(oneWeekFromNow.getDate() + 6);
 
   const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
@@ -50,8 +50,18 @@ export function WeeklyMealPlanner() {
     fats: 65,
   });
   const [showPlanner, setShowPlanner] = useState(false);
-  const [weeklyPlan, setWeeklyPlan] = useState<{ [key: string]: Meal[] }>(
-    daysOfWeek.reduce((acc, day) => ({ ...acc, [day]: [] }), {})
+  const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPlan>(
+    daysOfWeek.reduce(
+      (acc, day) => ({
+        ...acc,
+        [day]: {
+          meals: [],
+          dayOfWeek: day,
+          mealDayId: "",
+        },
+      }),
+      {}
+    )
   );
   const [isAddMealDialogOpen, setIsAddMealDialogOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
@@ -144,10 +154,7 @@ export function WeeklyMealPlanner() {
     { name: "Fats", value: nutrition.fats, fill: "hsl(var(--chart-3))" },
   ];
 
-  const handleAddMealClick = (day: string) => {
-    const dayMeals = weeklyPlan[day];
-    const mealDayId = dayMeals.length > 0 ? dayMeals[0].mealDayId : null;
-
+  const handleAddMealClick = (mealDayId: string, day: string) => {
     if (!mealDayId) {
       toast({
         title: "Error",
@@ -163,10 +170,16 @@ export function WeeklyMealPlanner() {
   };
 
   const handleAddMeals = (meals: Meal[]) => {
+    console.log("🚀 | handleAddMeals | meals:", meals);
+    console.log("🚀 | handleAddMeals | selectedDay:", selectedDay);
+    console.log("🚀 | handleAddMeals | weeklyPlan:", weeklyPlan[selectedDay || ""]);
     if (selectedDay) {
       setWeeklyPlan((prev) => ({
         ...prev,
-        [selectedDay]: [...prev[selectedDay], ...meals],
+        [selectedDay]: {
+          ...prev[selectedDay],
+          meals: [...prev[selectedDay].meals, ...meals],
+        },
       }));
       setIsAddMealDialogOpen(false);
     }
@@ -256,7 +269,7 @@ export function WeeklyMealPlanner() {
       <PieChart data={createChartData(nutritionTarget)} />
 
       {daysOfWeek.map((day) => {
-        const dailyNutrition = calculateDailyNutrition(weeklyPlan[day]);
+        const dailyNutrition = calculateDailyNutrition(weeklyPlan[day].meals);
         return (
           <Card key={day}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 py-2 pr-2">
@@ -285,14 +298,14 @@ export function WeeklyMealPlanner() {
             </CardHeader>
             <CardContent className="pr-2">
               <div className="space-y-1">
-                {weeklyPlan[day].map((meal, index) => (
+                {weeklyPlan[day].meals.map((meal, index) => (
                   <MealCardCompact key={index} meal={meal} />
                 ))}
               </div>
               <Button
                 className="mt-4"
-                onClick={() => handleAddMealClick(day)}
-                disabled={!weeklyPlan[day]?.[0]?.mealDayId}
+                onClick={() => handleAddMealClick(weeklyPlan[day]?.mealDayId, day)}
+                disabled={!weeklyPlan[day]?.mealDayId}
               >
                 Add Meal
               </Button>
@@ -306,7 +319,8 @@ export function WeeklyMealPlanner() {
         onClose={() => setIsAddMealDialogOpen(false)}
         onAddMeals={handleAddMeals}
         favoriteMeals={favoriteMeals || []}
-        mealDayId={currentMealDayId} // You'll need to track this when a day is selected
+        mealDayId={currentMealDayId || ""}
+        currentMeals={weeklyPlan[selectedDay || ""]?.meals || []}
       />
 
       <Button
