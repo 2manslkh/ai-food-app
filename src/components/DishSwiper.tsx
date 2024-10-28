@@ -5,30 +5,57 @@ import { Meal } from "@/types";
 import { MealCard } from "./MealCard";
 import { X, Heart } from "lucide-react";
 import { InteractiveButton } from "@/components/ui/InteractiveButton";
+import { useHandleMealInteraction } from "@/hooks/useApi";
+import { toast } from "@/hooks/use-toast";
 
 interface DishSwiperProps {
   dishes: Meal[];
-  onComplete: (favorites: Meal[]) => void;
+  onComplete: () => void;
 }
 
 export function DishSwiper({ dishes, onComplete }: DishSwiperProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [favorites, setFavorites] = useState<Meal[]>([]);
+  const handleMealInteraction = useHandleMealInteraction();
 
-  const handleLike = () => {
-    setFavorites([...favorites, dishes[currentIndex]]);
-    nextDish();
+  const handleLike = async () => {
+    try {
+      await handleMealInteraction.mutateAsync({
+        meal: dishes[currentIndex],
+        isFavorite: true,
+      });
+      nextDish();
+    } catch (error) {
+      console.error("Failed to save favorite:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save your favorite. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDislike = () => {
-    nextDish();
+  const handleDislike = async () => {
+    try {
+      await handleMealInteraction.mutateAsync({
+        meal: dishes[currentIndex],
+        isFavorite: false,
+      });
+      nextDish();
+    } catch (error) {
+      console.error("Failed to record dislike:", error);
+      toast({
+        title: "Error",
+        description: "Failed to record your choice. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const nextDish = () => {
     if (currentIndex < dishes.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      onComplete(favorites);
+      onComplete();
     }
   };
 

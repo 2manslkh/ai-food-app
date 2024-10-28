@@ -1,7 +1,7 @@
 import { QueryObserverResult, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useUserId } from "./useUserId";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
-import { AggregatedMeal, Meal, MealDay, MealPlan } from "@/types";
+import { AggregatedMeal, Meal, MealDay, MealPlan, NutritionInfo } from "@/types";
 
 // Create Meal Plan
 export function useCreateMealPlan() {
@@ -345,5 +345,78 @@ export function useFetchFavoriteMeals() {
         })
       );
     },
+  });
+}
+
+// Add this new hook to handle meal interactions
+export function useHandleMealInteraction() {
+  const queryClient = useQueryClient();
+  const { supabase } = useSupabase();
+
+  console.log("useHandleMealInteraction");
+
+  return useMutation({
+    mutationFn: async ({ meal, isFavorite }: { meal: Meal; isFavorite: boolean }) => {
+      const { data, error } = await supabase.rpc("handle_meal_interaction", {
+        p_name: meal.name,
+        p_type: meal.meal_type,
+        p_instructions: meal.recipe.instructions,
+        p_ingredients: meal.recipe.ingredients,
+        p_calories: meal.nutrition.calories,
+        p_protein: meal.nutrition.protein,
+        p_carbs: meal.nutrition.carbs,
+        p_fats: meal.nutrition.fats,
+        p_image: meal.image || "", // Make sure to provide null if image is undefined
+        p_is_favorite: isFavorite,
+      });
+
+      // public.handle_meal_interaction(p_calories, p_carbs, p_fats, p_image, p_ingredients, p_instructions, p_is_favorite, p_name, p_protein, p_type)
+      // public.handle_meal_interaction(p_calories, p_carbs, p_fats, p_image, p_ingredients, p_instructions, p_is_favorite, p_name, p_protein)
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["favoriteMeals"] });
+    },
+  });
+}
+
+// Fetch favorite meals for a specific user
+export function useFetchUserFavoriteMeals() {
+  const { supabase } = useSupabase();
+  const userId = useUserId();
+
+  return useQuery<Meal[], Error>({
+    queryKey: ["userFavoriteMeals", userId],
+    queryFn: async () => {
+      if (!userId) throw new Error("User not authenticated");
+
+      const { data, error } = await supabase.rpc("get_user_favorite_meals", {
+        p_user_id: userId,
+      });
+      console.log("🚀 | queryFn: | data:", data);
+
+      if (error) throw error;
+      if (!data) return [];
+
+      return data.map(
+        (item): Meal => ({
+          id: item.recipe_id,
+          name: item.recipe_name,
+          type: item.recipe_type,
+          instructions: item.instructions,
+          ingredients: item.ingredients,
+          image: item.image,
+          nutrition: {
+            calories: item.nutrition?.calories || 0,
+            protein: item.nutrition?.protein || 0,
+            carbs: item.nutrition?.carbs || 0,
+            fats: item.nutrition?.fats || 0,
+          },
+        })
+      );
+    },
+    enabled: !!userId,
   });
 }

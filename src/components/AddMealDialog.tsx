@@ -13,6 +13,7 @@ interface AddMealDialogProps {
 }
 
 export function AddMealDialog({ isOpen, onClose, onAddMeals, favoriteMeals }: AddMealDialogProps) {
+  console.log("🚀 | AddMealDialog | favoriteMeals:", favoriteMeals);
   const [selectedMeals, setSelectedMeals] = useState<Set<string>>(new Set());
 
   const handleToggleMeal = (mealId: string) => {

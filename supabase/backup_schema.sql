@@ -33,11 +33,14 @@ CREATE TABLE IF NOT EXISTS health_data (
 CREATE TABLE IF NOT EXISTS recipes (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
+    type TEXT,
     instructions TEXT[],
+    ingredients TEXT[],  -- Added this line
     prep_time INTEGER,
     cook_time INTEGER,
     servings INTEGER,
     difficulty TEXT CHECK (difficulty IN ('easy', 'medium', 'hard')),
+    image TEXT,
     tags TEXT[]
 );
 
@@ -455,7 +458,88 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Grant execute permissions to authenticated users
+-- Function to create or get a meal
+CREATE OR REPLACE FUNCTION create_or_get_meal(
+    p_name TEXT,
+    p_type TEXT,
+    p_instructions TEXT[],
+    p_ingredients TEXT[],
+    p_calories INTEGER,
+    p_protein NUMERIC,
+    p_carbs NUMERIC,
+    p_fats NUMERIC,
+    p_image TEXT DEFAULT NULL
+) RETURNS UUID AS $$
+DECLARE
+    v_recipe_id UUID;
+    v_meal_id UUID;
+BEGIN
+    -- First try to find existing recipe
+    SELECT id INTO v_recipe_id
+    FROM recipes
+    WHERE name = p_name
+    AND type = p_type
+    LIMIT 1;
+
+    -- If recipe doesn't exist, create it
+    IF v_recipe_id IS NULL THEN
+        INSERT INTO recipes (name, type, instructions, ingredients, image)
+        VALUES (p_name, p_type, p_instructions, p_ingredients, p_image)
+        RETURNING id INTO v_recipe_id;
+
+        -- Create nutrition info for the recipe
+        INSERT INTO nutrition_info (recipe_id, calories, protein, carbs, fats)
+        VALUES (v_recipe_id, p_calories, p_protein, p_carbs, p_fats);
+    END IF;
+
+    RETURN v_recipe_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to handle meal interaction (like/dislike)
+CREATE OR REPLACE FUNCTION handle_meal_interaction(
+    p_name TEXT,
+    p_type TEXT,
+    p_instructions TEXT[],
+    p_ingredients TEXT[],
+    p_calories INTEGER,
+    p_protein NUMERIC,
+    p_carbs NUMERIC,
+    p_fats NUMERIC,
+    p_image TEXT,
+    p_is_favorite BOOLEAN DEFAULT FALSE
+) RETURNS JSONB AS $$
+DECLARE
+    v_recipe_id UUID;
+BEGIN
+    -- Create or get the meal
+    v_recipe_id := create_or_get_meal(
+        p_name,
+        p_type,
+        p_instructions,
+        p_ingredients,
+        p_calories,
+        p_protein,
+        p_carbs,
+        p_fats,
+        p_image
+    );
+
+    -- If it's a favorite, add to user's favorites
+    IF p_is_favorite THEN
+        INSERT INTO user_favorite_meals (user_id, recipe_id)
+        VALUES (auth.uid(), v_recipe_id)
+        ON CONFLICT (user_id, recipe_id) DO NOTHING;
+    END IF;
+
+    RETURN jsonb_build_object(
+        'recipe_id', v_recipe_id,
+        'is_favorite', p_is_favorite
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Grant execute permissions
 GRANT EXECUTE ON FUNCTION create_meal_plan(UUID, TEXT, DATE, DATE) TO authenticated;
 GRANT EXECUTE ON FUNCTION edit_meal_plan(UUID, TEXT, DATE, DATE) TO authenticated;
 GRANT EXECUTE ON FUNCTION delete_meal_plan(UUID) TO authenticated;
@@ -463,3 +547,6 @@ GRANT EXECUTE ON FUNCTION add_meal_to_meal_day(UUID, UUID, TEXT, NUMERIC) TO aut
 GRANT EXECUTE ON FUNCTION add_meal_day_to_meal_plan(UUID, DATE) TO authenticated;
 GRANT EXECUTE ON FUNCTION toggle_favorite_meal(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION get_favorite_meals() TO authenticated;
+GRANT EXECUTE ON FUNCTION create_or_get_meal(TEXT, TEXT, TEXT[], TEXT[], INTEGER, NUMERIC, NUMERIC, NUMERIC, TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION handle_meal_interaction(TEXT, TEXT, TEXT[], TEXT[], INTEGER, NUMERIC, NUMERIC, NUMERIC, TEXT, BOOLEAN) TO authenticated;
+

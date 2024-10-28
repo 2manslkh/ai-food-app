@@ -1,6 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Meal } from "@/types";
 
 interface MealCardProps {
@@ -8,6 +9,9 @@ interface MealCardProps {
 }
 
 export function MealCard({ meal }: MealCardProps) {
+  const [imageError, setImageError] = React.useState(false);
+  const [imageLoading, setImageLoading] = React.useState(true);
+
   return (
     <Card className="flex flex-col">
       <CardHeader>
@@ -15,13 +19,22 @@ export function MealCard({ meal }: MealCardProps) {
       </CardHeader>
       <CardContent className="flex-grow">
         <div className="relative mb-4 h-40 w-full">
-          <Image
-            src={meal.image}
-            alt={meal.name}
-            layout="fill"
-            objectFit="cover"
-            className="rounded-md"
-          />
+          {imageError || !meal.image ? (
+            <Skeleton className="h-40 w-full rounded-md" />
+          ) : (
+            <>
+              {imageLoading && <Skeleton className="absolute h-40 w-full rounded-md" />}
+              <Image
+                src={meal.image}
+                alt={meal.name}
+                layout="fill"
+                objectFit="cover"
+                className="rounded-md"
+                onError={() => setImageError(true)}
+                onLoad={() => setImageLoading(false)}
+              />
+            </>
+          )}
         </div>
         <p className="mb-2 text-sm text-muted-foreground">{meal.type}</p>
         <p className="mb-2 text-sm">

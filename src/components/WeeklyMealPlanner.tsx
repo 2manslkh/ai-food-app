@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, use } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,9 +9,13 @@ import { PieChartComponent as PieChart } from "@/components/ui/pie-chart";
 import { Meal } from "@/types";
 import { Progress } from "@/components/ui/progress";
 import { AddMealDialog } from "./AddMealDialog";
-import { mockMeals } from "@/lib/mocks";
 import { MealCardCompact } from "./MealCardCompact";
-import { useCreateMealPlan, useFetchMealPlans, useSaveMealPlanDays } from "@/hooks/useApi";
+import {
+  useCreateMealPlan,
+  useFetchMealPlans,
+  useFetchUserFavoriteMeals,
+  useSaveMealPlanDays,
+} from "@/hooks/useApi";
 import { useUserId } from "@/hooks/useUserId";
 import { toast } from "@/hooks/use-toast";
 
@@ -56,7 +60,8 @@ export function WeeklyMealPlanner() {
   const [startDate, setStartDate] = useState(formatDate(today));
   const [endDate, setEndDate] = useState(formatDate(oneWeekFromNow));
 
-  const favoriteMeals: Meal[] = mockMeals;
+  // const favoriteMeals: Meal[] = mockMeals;
+  const { data: favoriteMeals } = useFetchUserFavoriteMeals();
 
   const userId = useUserId();
   const createMealPlanMutation = useCreateMealPlan();
@@ -264,7 +269,7 @@ export function WeeklyMealPlanner() {
         isOpen={isAddMealDialogOpen}
         onClose={() => setIsAddMealDialogOpen(false)}
         onAddMeals={handleAddMeals}
-        favoriteMeals={favoriteMeals}
+        favoriteMeals={favoriteMeals || []}
       />
 
       <Button

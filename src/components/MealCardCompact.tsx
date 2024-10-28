@@ -2,6 +2,7 @@ import React from "react";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Meal } from "@/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface MealCardCompactProps {
   meal: Meal;
@@ -17,7 +18,11 @@ export function MealCardCompact({ meal, isSelected = false }: MealCardCompactPro
     >
       <div className="flex h-16 items-center">
         <div className="relative h-16 w-16 flex-shrink-0">
-          <Image src={meal.image} alt={meal.name} layout="fill" objectFit="cover" />
+          {meal.image ? (
+            <Image src={meal.image} alt={meal.name} layout="fill" objectFit="cover" />
+          ) : (
+            <Skeleton className="h-full w-full" />
+          )}
         </div>
         <CardContent className="flex flex-grow items-center justify-between p-2">
           <div className="overflow-hidden">
