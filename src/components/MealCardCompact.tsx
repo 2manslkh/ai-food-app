@@ -8,33 +8,20 @@ interface MealCardCompactProps {
   isSelected?: boolean;
 }
 
-export function MealCardCompact({
-  meal,
-  isSelected = false,
-}: MealCardCompactProps) {
+export function MealCardCompact({ meal, isSelected = false }: MealCardCompactProps) {
   return (
     <Card
-      className={`w-full transition-all overflow-hidden ${
-        isSelected
-          ? "shadow-[0_0_0_2px_rgba(59,130,246,0.5)] filter brightness-105"
-          : ""
+      className={`w-full overflow-hidden transition-all ${
+        isSelected ? "shadow-[0_0_0_2px_rgba(59,130,246,0.5)] brightness-105 filter" : ""
       }`}
     >
-      <div className="flex items-center h-16">
+      <div className="flex h-16 items-center">
         <div className="relative h-16 w-16 flex-shrink-0">
-          <Image
-            src={meal.image}
-            alt={meal.name}
-            layout="fill"
-            objectFit="cover"
-          />
+          <Image src={meal.image} alt={meal.name} layout="fill" objectFit="cover" />
         </div>
-        <CardContent className="flex-grow p-2 flex justify-between items-center">
+        <CardContent className="flex flex-grow items-center justify-between p-2">
           <div className="overflow-hidden">
-            <h3
-              className="font-semibold text-sm mb-1 max-w-48 truncate"
-              title={meal.name}
-            >
+            <h3 className="mb-1 max-w-48 truncate text-sm font-semibold" title={meal.name}>
               {meal.name}
             </h3>
             <div className="text-xs text-muted-foreground">
@@ -43,7 +30,7 @@ export function MealCardCompact({
               <span>F: {meal.nutrition.fats}g</span>
             </div>
           </div>
-          <div className="text-sm font-medium ml-2 whitespace-nowrap">
+          <div className="ml-2 whitespace-nowrap text-sm font-medium">
             {meal.nutrition.calories} kcal
           </div>
         </CardContent>

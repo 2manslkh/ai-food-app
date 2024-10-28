@@ -5,14 +5,14 @@ import Typewriter from "typewriter-effect";
 export function LoginScreen() {
   return (
     <>
-      <div className="flex flex-col h-full">
-        <div className="flex-grow flex items-center justify-center">
+      <div className="flex h-full flex-col">
+        <div className="flex flex-grow items-center justify-center">
           <div className="text-center">
             <div className="mb-8">
               <div className="text-5xl font-bold">Title</div>
             </div>
 
-            <h1 className="text-3xl font-bold mb-8 h-[200px]">
+            <h1 className="mb-8 h-[200px] text-3xl font-bold">
               <Typewriter
                 options={{
                   strings: [
@@ -33,7 +33,7 @@ export function LoginScreen() {
         </div>
       </div>
 
-      <div className="w-full max-w-md mx-auto my-auto">
+      <div className="mx-auto my-auto w-full max-w-md">
         <SupabaseLogin />
       </div>
     </>

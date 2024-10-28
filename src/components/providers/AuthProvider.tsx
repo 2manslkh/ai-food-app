@@ -25,9 +25,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, [supabase.auth]);
 
-  return (
-    <AuthContext.Provider value={{ session }}>{children}</AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ session }}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => useContext(AuthContext);

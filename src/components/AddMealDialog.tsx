@@ -1,10 +1,5 @@
 import React, { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Meal } from "@/types/types";
@@ -17,12 +12,7 @@ interface AddMealDialogProps {
   favoriteMeals: Meal[];
 }
 
-export function AddMealDialog({
-  isOpen,
-  onClose,
-  onAddMeals,
-  favoriteMeals,
-}: AddMealDialogProps) {
+export function AddMealDialog({ isOpen, onClose, onAddMeals, favoriteMeals }: AddMealDialogProps) {
   const [selectedMeals, setSelectedMeals] = useState<Set<string>>(new Set());
 
   const handleToggleMeal = (mealId: string) => {
@@ -38,9 +28,7 @@ export function AddMealDialog({
   };
 
   const handleAddSelectedMeals = () => {
-    const mealsToAdd = favoriteMeals.filter((meal) =>
-      selectedMeals.has(meal.id)
-    );
+    const mealsToAdd = favoriteMeals.filter((meal) => selectedMeals.has(meal.id));
     onAddMeals(mealsToAdd);
     setSelectedMeals(new Set());
     onClose();
@@ -60,19 +48,13 @@ export function AddMealDialog({
                 className="cursor-pointer p-1"
                 onClick={() => handleToggleMeal(meal.id)}
               >
-                <MealCardCompact
-                  meal={meal}
-                  isSelected={selectedMeals.has(meal.id)}
-                />
+                <MealCardCompact meal={meal} isSelected={selectedMeals.has(meal.id)} />
               </div>
             ))}
           </div>
         </ScrollArea>
-        <div className="flex justify-end mt-4">
-          <Button
-            onClick={handleAddSelectedMeals}
-            disabled={selectedMeals.size === 0}
-          >
+        <div className="mt-4 flex justify-end">
+          <Button onClick={handleAddSelectedMeals} disabled={selectedMeals.size === 0}>
             Add Selected Meals ({selectedMeals.size})
           </Button>
         </div>

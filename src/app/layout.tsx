@@ -24,17 +24,13 @@ export const metadata: Metadata = {
 
 // Create a client
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <ThemeProvider>
         <Providers>
-          <body className="antialiased bg-background text-foreground font-sans">
-            <div className="flex flex-col h-screen">
+          <body className="bg-background font-sans text-foreground antialiased">
+            <div className="flex h-screen flex-col">
               <Navbar />
               <main className="flex-grow">{children}</main>
             </div>

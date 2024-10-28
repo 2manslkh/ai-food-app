@@ -28,15 +28,7 @@ interface DailyNutrition {
   fats: number;
 }
 
-const daysOfWeek = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
+const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 export function WeeklyMealPlanner() {
   const today = new Date();
@@ -105,20 +97,9 @@ export function WeeklyMealPlanner() {
     );
   };
 
-  const renderNutrientBar = (
-    current: number,
-    target: number,
-    color: string,
-    fillColor: string
-  ) => {
+  const renderNutrientBar = (current: number, target: number, color: string, fillColor: string) => {
     const percentage = Math.min((current / target) * 100, 100);
-    return (
-      <Progress
-        value={percentage}
-        className={`w-8 h-2 ${color}`}
-        fillColor={fillColor}
-      />
-    );
+    return <Progress value={percentage} className={`h-2 w-8 ${color}`} fillColor={fillColor} />;
   };
 
   const createChartData = (nutrition: DailyNutrition) => [
@@ -150,7 +131,7 @@ export function WeeklyMealPlanner() {
 
   if (!showPlanner) {
     return (
-      <Card className="w-full max-w-md mx-auto">
+      <Card className="mx-auto w-full max-w-md">
         <CardHeader>
           <CardTitle>Create New Meal Plan</CardTitle>
         </CardHeader>
@@ -188,7 +169,7 @@ export function WeeklyMealPlanner() {
             <Button type="submit" disabled={isLoading}>
               {isLoading ? "Creating..." : "Create New Meal Plan"}
             </Button>
-            {error && <p className="text-red-500 text-sm">{error.message}</p>}
+            {error && <p className="text-sm text-red-500">{error.message}</p>}
           </form>
         </CardContent>
       </Card>
@@ -203,7 +184,7 @@ export function WeeklyMealPlanner() {
         const dailyNutrition = calculateDailyNutrition(weeklyPlan[day]);
         return (
           <Card key={day}>
-            <CardHeader className="flex flex-row items-center justify-between py-2 pr-2 space-y-0">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 py-2 pr-2">
               <CardTitle className="text-lg">{day}</CardTitle>
               <div className="flex items-center space-x-2">
                 {renderNutrientBar(
@@ -224,9 +205,7 @@ export function WeeklyMealPlanner() {
                   "bg-[hsl(var(--chart-bg-3))]",
                   "hsl(var(--chart-3))"
                 )}
-                <span className="text-xs font-medium">
-                  {dailyNutrition.calories} kcal
-                </span>
+                <span className="text-xs font-medium">{dailyNutrition.calories} kcal</span>
               </div>
             </CardHeader>
             <CardContent className="pr-2">

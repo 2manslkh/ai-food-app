@@ -43,11 +43,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     };
   }, [supabase, router]);
 
-  return (
-    <Context.Provider value={{ supabase, session, user }}>
-      {children}
-    </Context.Provider>
-  );
+  return <Context.Provider value={{ supabase, session, user }}>{children}</Context.Provider>;
 }
 
 export const useSupabase = () => {

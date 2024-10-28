@@ -14,7 +14,7 @@ export function MealCard({ meal }: MealCardProps) {
         <CardTitle className="text-lg">{meal.name}</CardTitle>
       </CardHeader>
       <CardContent className="flex-grow">
-        <div className="relative w-full h-40 mb-4">
+        <div className="relative mb-4 h-40 w-full">
           <Image
             src={meal.image}
             alt={meal.name}
@@ -23,14 +23,13 @@ export function MealCard({ meal }: MealCardProps) {
             className="rounded-md"
           />
         </div>
-        <p className="text-sm text-muted-foreground mb-2">{meal.type}</p>
-        <p className="text-sm mb-2">
-          Calories: {meal.nutrition.calories} | Protein:{" "}
-          {meal.nutrition.protein}g | Carbs: {meal.nutrition.carbs}g | Fats:{" "}
-          {meal.nutrition.fats}g
+        <p className="mb-2 text-sm text-muted-foreground">{meal.type}</p>
+        <p className="mb-2 text-sm">
+          Calories: {meal.nutrition.calories} | Protein: {meal.nutrition.protein}g | Carbs:{" "}
+          {meal.nutrition.carbs}g | Fats: {meal.nutrition.fats}g
         </p>
-        <h4 className="font-semibold mt-2">Ingredients:</h4>
-        <ul className="list-disc list-inside text-sm">
+        <h4 className="mt-2 font-semibold">Ingredients:</h4>
+        <ul className="list-inside list-disc text-sm">
           {meal.recipe.ingredients.map((ingredient, index) => (
             <li key={index}>{ingredient}</li>
           ))}

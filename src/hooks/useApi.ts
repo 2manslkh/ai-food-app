@@ -1,7 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useUserId } from './useUserId';
-import { useSupabase } from '@/components/providers/SupabaseProvider';
-import { Meal, MealDay, MealPlan } from '@/types/types';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useUserId } from "./useUserId";
+import { useSupabase } from "@/components/providers/SupabaseProvider";
+import { Meal, MealDay, MealPlan } from "@/types/types";
 
 // Create Meal Plan
 export function useCreateMealPlan() {
@@ -10,19 +10,27 @@ export function useCreateMealPlan() {
   const { supabase } = useSupabase();
 
   return useMutation({
-    mutationFn: async ({ name, startDate, endDate }: { name: string; startDate: string; endDate: string }) => {
-      if (!userId) throw new Error('User not authenticated');
-      const { data, error } = await supabase.rpc('create_meal_plan', {
+    mutationFn: async ({
+      name,
+      startDate,
+      endDate,
+    }: {
+      name: string;
+      startDate: string;
+      endDate: string;
+    }) => {
+      if (!userId) throw new Error("User not authenticated");
+      const { data, error } = await supabase.rpc("create_meal_plan", {
         p_user_id: userId,
         p_name: name,
         p_start_date: startDate,
-        p_end_date: endDate
+        p_end_date: endDate,
       });
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['mealPlans'] });
+      queryClient.invalidateQueries({ queryKey: ["mealPlans"] });
     },
   });
 }
@@ -33,18 +41,28 @@ export function useEditMealPlan() {
   const { supabase } = useSupabase();
 
   return useMutation({
-    mutationFn: async ({ mealPlanId, name, startDate, endDate }: { mealPlanId: string; name: string; startDate: string; endDate: string }) => {
-      const { data, error } = await supabase.rpc('edit_meal_plan', {
+    mutationFn: async ({
+      mealPlanId,
+      name,
+      startDate,
+      endDate,
+    }: {
+      mealPlanId: string;
+      name: string;
+      startDate: string;
+      endDate: string;
+    }) => {
+      const { data, error } = await supabase.rpc("edit_meal_plan", {
         p_meal_plan_id: mealPlanId,
         p_name: name,
         p_start_date: startDate,
-        p_end_date: endDate
+        p_end_date: endDate,
       });
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['mealPlans'] });
+      queryClient.invalidateQueries({ queryKey: ["mealPlans"] });
     },
   });
 }
@@ -56,14 +74,14 @@ export function useDeleteMealPlan() {
 
   return useMutation({
     mutationFn: async (mealPlanId: string) => {
-      const { data, error } = await supabase.rpc('delete_meal_plan', {
-        p_meal_plan_id: mealPlanId
+      const { data, error } = await supabase.rpc("delete_meal_plan", {
+        p_meal_plan_id: mealPlanId,
       });
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['mealPlans'] });
+      queryClient.invalidateQueries({ queryKey: ["mealPlans"] });
     },
   });
 }
@@ -73,12 +91,12 @@ export function useFetchMealPlans() {
   const { supabase } = useSupabase();
 
   return useQuery<MealPlan[], Error>({
-    queryKey: ['mealPlans'],
+    queryKey: ["mealPlans"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('meal_plans')
-        .select('*')
-        .order('start_date', { ascending: true });
+        .from("meal_plans")
+        .select("*")
+        .order("start_date", { ascending: true });
       if (error) throw error;
       return data;
     },
@@ -92,15 +110,15 @@ export function useAddMealDay() {
 
   return useMutation({
     mutationFn: async ({ mealPlanId, date }: { mealPlanId: string; date: string }) => {
-      const { data, error } = await supabase.rpc('add_meal_day_to_meal_plan', {
+      const { data, error } = await supabase.rpc("add_meal_day_to_meal_plan", {
         p_meal_plan_id: mealPlanId,
-        p_date: date
+        p_date: date,
       });
       if (error) throw error;
       return data;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['mealDays', variables.mealPlanId] });
+      queryClient.invalidateQueries({ queryKey: ["mealDays", variables.mealPlanId] });
     },
   });
 }
@@ -110,13 +128,13 @@ export function useFetchMealDays(mealPlanId: string) {
   const { supabase } = useSupabase();
 
   return useQuery<MealDay[], Error>({
-    queryKey: ['mealDays', mealPlanId],
+    queryKey: ["mealDays", mealPlanId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('meal_days')
-        .select('*')
-        .eq('meal_plan_id', mealPlanId)
-        .order('date', { ascending: true });
+        .from("meal_days")
+        .select("*")
+        .eq("meal_plan_id", mealPlanId)
+        .order("date", { ascending: true });
       if (error) throw error;
       return data;
     },
@@ -129,18 +147,28 @@ export function useAddMealToMealDay() {
   const { supabase } = useSupabase();
 
   return useMutation({
-    mutationFn: async ({ mealDayId, recipeId, mealType, servingSize }: { mealDayId: string; recipeId: string; mealType: string; servingSize: number }) => {
-      const { data, error } = await supabase.rpc('add_meal_to_meal_day', {
+    mutationFn: async ({
+      mealDayId,
+      recipeId,
+      mealType,
+      servingSize,
+    }: {
+      mealDayId: string;
+      recipeId: string;
+      mealType: string;
+      servingSize: number;
+    }) => {
+      const { data, error } = await supabase.rpc("add_meal_to_meal_day", {
         p_meal_day_id: mealDayId,
         p_recipe_id: recipeId,
         p_meal_type: mealType,
-        p_serving_size: servingSize
+        p_serving_size: servingSize,
       });
       if (error) throw error;
       return data;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['meals', variables.mealDayId] });
+      queryClient.invalidateQueries({ queryKey: ["meals", variables.mealDayId] });
     },
   });
 }
@@ -150,11 +178,12 @@ export function useFetchMealsForMealDay(mealDayId: string) {
   const { supabase } = useSupabase();
 
   return useQuery<Meal[], Error>({
-    queryKey: ['meals', mealDayId],
+    queryKey: ["meals", mealDayId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('meal_day_meals')
-        .select(`
+        .from("meal_day_meals")
+        .select(
+          `
           meals (
             id,
             recipe_id,
@@ -165,8 +194,9 @@ export function useFetchMealsForMealDay(mealDayId: string) {
             carbs,
             fats
           )
-        `)
-        .eq('meal_day_id', mealDayId);
+        `
+        )
+        .eq("meal_day_id", mealDayId);
       if (error) throw error;
       return data.map((item: { meals: Meal }) => item.meals);
     },

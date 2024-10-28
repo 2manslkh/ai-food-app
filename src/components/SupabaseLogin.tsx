@@ -106,8 +106,8 @@ export function SupabaseLogin() {
 
   if (authChecking) {
     return (
-      <div className="flex justify-center items-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div className="flex items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-gray-900"></div>
       </div>
     );
   }
@@ -147,7 +147,7 @@ export function SupabaseLogin() {
       <button
         onClick={handleGoogleLogin}
         disabled={loading}
-        className="w-full flex items-center justify-center mb-4"
+        className="mb-4 flex w-full items-center justify-center"
       >
         {loading ? (
           "Loading..."
@@ -163,16 +163,10 @@ export function SupabaseLogin() {
           </>
         )}
       </button>
-      <Button
-        onClick={handleAnonymousLogin}
-        disabled={loading}
-        className="w-full"
-      >
+      <Button onClick={handleAnonymousLogin} disabled={loading} className="w-full">
         {loading ? "Loading..." : "Continue as Guest"}
       </Button>
-      {message && (
-        <p className="text-sm text-center text-red-500 mt-4">{message}</p>
-      )}
+      {message && <p className="mt-4 text-center text-sm text-red-500">{message}</p>}
     </>
   );
 }

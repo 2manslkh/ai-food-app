@@ -15,14 +15,7 @@ interface ComponentProps {
 }
 
 const RADIAN = Math.PI / 180;
-const renderCustomizedLabel = ({
-  cx,
-  cy,
-  midAngle,
-  innerRadius,
-  outerRadius,
-  value,
-}: any) => {
+const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value }: any) => {
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
@@ -43,11 +36,11 @@ const renderCustomizedLabel = ({
 
 export function PieChartComponent({ data }: ComponentProps) {
   return (
-    <Card className="w-full max-h-[300px]">
+    <Card className="max-h-[300px] w-full">
       <CardHeader className="pb-0">
         <CardTitle>Daily Nutrition Breakdown</CardTitle>
       </CardHeader>
-      <CardContent className="w-full h-[300px] flex justify-center items-center">
+      <CardContent className="flex h-[300px] w-full items-center justify-center">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie

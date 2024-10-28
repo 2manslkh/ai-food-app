@@ -73,21 +73,17 @@ export function AIChat() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full flex-col">
       <ScrollArea className="flex-grow" ref={scrollAreaRef}>
         <div className="space-y-4 p-4">
           {messages.map((message, index) => (
             <div
               key={index}
-              className={`flex ${
-                message.role === "user" ? "justify-end" : "justify-start"
-              }`}
+              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[80%] p-2 rounded-lg ${
-                  message.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
+                className={`max-w-[80%] rounded-lg p-2 ${
+                  message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
                 }`}
               >
                 {message.content}
@@ -95,21 +91,18 @@ export function AIChat() {
             </div>
           ))}
           {isLoading && (
-            <div className="flex justify-center items-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            <div className="flex items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-primary"></div>
             </div>
           )}
           {showDishSwiper && (
             <div className="mt-4">
-              <DishSwiper
-                dishes={generatedMeals}
-                onComplete={handleDishSwiperComplete}
-              />
+              <DishSwiper dishes={generatedMeals} onComplete={handleDishSwiperComplete} />
             </div>
           )}
         </div>
       </ScrollArea>
-      <div className="bg-background p-4 border-t sticky bottom-0">
+      <div className="sticky bottom-0 border-t bg-background p-4">
         <form onSubmit={handleSubmit} className="flex space-x-2">
           <Input
             type="text"

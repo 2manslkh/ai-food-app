@@ -23,22 +23,17 @@ const MealPlanPage: React.FC = () => {
     <div className="container mx-auto px-4 py-8">
       {!showPlanner && (
         <>
-          <h1 className="text-2xl font-bold mb-4">Your Meal Plans</h1>
+          <h1 className="mb-4 text-2xl font-bold">Your Meal Plans</h1>
           {mealPlans && mealPlans.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {mealPlans.map((plan) => (
                 <Card key={plan.id}>
                   <CardHeader>
                     <CardTitle>{plan.name}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p>
-                      Start Date:{" "}
-                      {new Date(plan.start_date).toLocaleDateString()}
-                    </p>
-                    <p>
-                      End Date: {new Date(plan.end_date).toLocaleDateString()}
-                    </p>
+                    <p>Start Date: {new Date(plan.start_date).toLocaleDateString()}</p>
+                    <p>End Date: {new Date(plan.end_date).toLocaleDateString()}</p>
                     <Button
                       className="mt-2"
                       onClick={() => {

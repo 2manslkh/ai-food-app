@@ -12,9 +12,7 @@ const UserOnboarding: React.FC = () => {
     timeAvailability: "",
   });
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
@@ -31,18 +29,16 @@ const UserOnboarding: React.FC = () => {
   const prevStep = () => setStep(step - 1);
 
   return (
-    <div className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">User Onboarding</h2>
+    <div className="mx-auto max-w-md rounded-lg bg-white p-8 shadow-md">
+      <h2 className="mb-4 text-2xl font-bold">User Onboarding</h2>
       {step === 1 && (
         <div>
-          <h3 className="text-lg font-semibold mb-2">
-            Step 1: Diet Preference
-          </h3>
+          <h3 className="mb-2 text-lg font-semibold">Step 1: Diet Preference</h3>
           <select
             name="dietPreference"
             value={formData.dietPreference}
             onChange={handleInputChange}
-            className="w-full p-2 border rounded"
+            className="w-full rounded border p-2"
           >
             <option value="">Select diet preference</option>
             <option value="omnivore">Omnivore</option>
@@ -55,13 +51,13 @@ const UserOnboarding: React.FC = () => {
       )}
       {step === 2 && (
         <div>
-          <h3 className="text-lg font-semibold mb-2">Step 2: Health Goals</h3>
+          <h3 className="mb-2 text-lg font-semibold">Step 2: Health Goals</h3>
           <select
             name="healthGoals"
             multiple
             value={formData.healthGoals}
             onChange={handleMultiSelect}
-            className="w-full p-2 border rounded"
+            className="w-full rounded border p-2"
           >
             <option value="weight_loss">Weight Loss</option>
             <option value="muscle_gain">Muscle Gain</option>
@@ -74,21 +70,16 @@ const UserOnboarding: React.FC = () => {
       {/* Add more steps for allergies, cooking skill, and time availability */}
       <div className="mt-4 flex justify-between">
         {step > 1 && (
-          <button onClick={prevStep} className="bg-gray-300 px-4 py-2 rounded">
+          <button onClick={prevStep} className="rounded bg-gray-300 px-4 py-2">
             Previous
           </button>
         )}
         {step < 5 ? (
-          <button
-            onClick={nextStep}
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-          >
+          <button onClick={nextStep} className="rounded bg-blue-500 px-4 py-2 text-white">
             Next
           </button>
         ) : (
-          <button className="bg-green-500 text-white px-4 py-2 rounded">
-            Finish
-          </button>
+          <button className="rounded bg-green-500 px-4 py-2 text-white">Finish</button>
         )}
       </div>
     </div>

@@ -14,11 +14,11 @@ const PieChartPage: React.FC = () => {
   console.log("🚀 | dataPie:", dataPie);
 
   return (
-    <Card className="w-full max-h-[300px]">
+    <Card className="max-h-[300px] w-full">
       <CardHeader>
         <CardTitle>Nutrition Breakdown</CardTitle>
       </CardHeader>
-      <CardContent className="w-[300px] h-[300px]">
+      <CardContent className="h-[300px] w-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie

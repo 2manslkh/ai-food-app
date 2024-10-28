@@ -1,4 +1,4 @@
-import { useSupabase } from '@/components/providers/SupabaseProvider';
+import { useSupabase } from "@/components/providers/SupabaseProvider";
 
 export function useUserId() {
   const { userId } = useSupabase();

@@ -32,7 +32,7 @@ export interface Meal {
 }
 
 export interface Recipe {
-  author: string ;
+  author: string;
   ingredients: string[];
   instructions: string[];
 }

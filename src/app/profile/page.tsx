@@ -14,7 +14,7 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Profile</h1>
+        <h1 className="mb-6 text-3xl font-bold">Profile</h1>
         <p>Please log in to view your profile.</p>
       </div>
     );
@@ -22,11 +22,10 @@ export default function ProfilePage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Profile</h1>
-      <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+      <h1 className="mb-6 text-3xl font-bold">Profile</h1>
+      <div className="mb-4 rounded bg-white px-8 pb-8 pt-6 shadow-md">
         <p className="mb-4">
-          <strong>Name:</strong>{" "}
-          {user.user_metadata.full_name || "Not provided"}
+          <strong>Name:</strong> {user.user_metadata.full_name || "Not provided"}
         </p>
         <p className="mb-4">
           <strong>Email:</strong> {user.email}
