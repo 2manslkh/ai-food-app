@@ -163,7 +163,7 @@ export function SupabaseLogin() {
           </>
         )}
       </button>
-      <Button onClick={handleAnonymousLogin} disabled={loading} className="w-full">
+      <Button onClick={handleAnonymousLogin} disabled={loading} className="h-[40px] w-[175px]">
         {loading ? "Loading..." : "Continue as Guest"}
       </Button>
       {message && <p className="mt-4 text-center text-sm text-red-500">{message}</p>}

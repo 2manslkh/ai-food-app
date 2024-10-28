@@ -31,10 +31,9 @@ export function LoginScreen() {
             </h1>
           </div>
         </div>
-      </div>
-
-      <div className="mx-auto my-auto w-full max-w-md">
-        <SupabaseLogin />
+        <div className="mx-auto my-auto flex w-full max-w-md flex-col items-center justify-center px-10 pb-24">
+          <SupabaseLogin />
+        </div>
       </div>
     </>
   );
