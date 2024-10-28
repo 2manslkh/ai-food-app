@@ -11,7 +11,7 @@ interface FloatingIconProps {
 }
 
 const FloatingIcon: React.FC<FloatingIconProps> = ({ style, Icon, className }) => (
-  <div className="animate-float-up pointer-events-none absolute" style={style}>
+  <div className="pointer-events-none absolute animate-float-up" style={style}>
     <Icon className={className} />
   </div>
 );

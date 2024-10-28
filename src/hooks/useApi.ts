@@ -1,16 +1,7 @@
 import { QueryObserverResult, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useUserId } from "./useUserId";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
-import {
-  AggregatedMeal,
-  Json,
-  Meal,
-  MealDay,
-  MealPlan,
-  MealPlanSummary,
-  NutritionInfo,
-  WeeklyPlan,
-} from "@/types";
+import { AggregatedMeal, Meal, MealPlanSummary, WeeklyPlan, MealDay } from "@/types";
 
 // Create Meal Plan
 export function useCreateMealPlan() {
@@ -304,6 +295,7 @@ export function useFetchFavoriteMeals() {
       if (!data) return [];
 
       return data.map(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (item: any): Meal => ({
           id: item.recipe_id,
           name: item.recipe_name,
@@ -381,6 +373,7 @@ export function useFetchUserFavoriteMeals() {
       if (!data) return [];
 
       return data.map(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (item: any): Meal => ({
           id: item.recipe_id,
           name: item.recipe_name,
@@ -443,47 +436,70 @@ export function useFetchMealPlanDays(mealPlanId: string | null) {
       if (error) throw error;
 
       // Initialize empty plan with all days
-      const emptyPlan = daysOfWeek.reduce(
-        (acc, day) => ({
-          ...acc,
-          [day]: {
-            meals: [],
-            dayOfWeek: day,
-            mealDayId: "",
-          },
-        }),
-        {} as any
-      );
+      const emptyPlan: WeeklyPlan = daysOfWeek.map((day) => ({
+        id: "",
+        meal_plan_id: mealPlanId,
+        date: new Date(),
+        total_calories: 0,
+        total_protein: 0,
+        total_carbs: 0,
+        total_fats: 0,
+        meals: [],
+        day_of_week: day,
+        meal_day_id: "",
+      }));
 
       // If no data, return empty plan
       if (!data || !Array.isArray(data)) return emptyPlan;
 
-      // Merge data with empty plan to ensure all days exist
-      return data.reduce((acc, day) => {
-        if (!day || !day.day_of_week) return acc;
-
-        const dayOfWeek = day.day_of_week;
+      // Transform the data to match MealDay type
+      const transformedDays = data.map((day): MealDay => {
         const meals = Array.isArray(day.meals) ? day.meals : [];
 
-        // Transform meals to include mealDayId
-        const transformedMeals = meals.map((meal: any) => ({
-          id: meal.id,
-          name: meal.name,
-          type: meal.type,
-          nutrition: meal.nutrition,
-          image: meal.image,
-          recipe: meal.recipe,
-          mealDayId: meal.mealDayId,
-        }));
-
-        acc[dayOfWeek] = {
-          meals: transformedMeals,
-          dayOfWeek: dayOfWeek,
-          mealDayId: day.id,
+        return {
+          id: day.id,
+          meal_plan_id: mealPlanId,
+          date: new Date(day.date),
+          total_calories: day.total_calories,
+          total_protein: day.total_protein,
+          total_carbs: day.total_carbs,
+          total_fats: day.total_fats,
+          day_of_week: day.day_of_week,
+          meal_day_id: day.id,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          meals: meals.map((meal: any) => ({
+            id: meal.id,
+            name: meal.name,
+            type: meal.type,
+            recipe_id: meal.recipe_id || "",
+            meal_type: meal.meal_type || meal.type,
+            serving_size: meal.serving_size || 1,
+            calories: meal.nutrition?.calories || 0,
+            protein: meal.nutrition?.protein || 0,
+            carbs: meal.nutrition?.carbs || 0,
+            fats: meal.nutrition?.fats || 0,
+            nutrition: meal.nutrition || {
+              calories: 0,
+              protein: 0,
+              carbs: 0,
+              fats: 0,
+            },
+            image: meal.image || "",
+            recipe: meal.recipe || {
+              author: "",
+              ingredients: [],
+              instructions: [],
+            },
+            meal_day_id: day.id,
+          })),
         };
+      });
 
-        return acc;
-      }, emptyPlan);
+      // Merge with empty plan to ensure all days exist
+      return daysOfWeek.map((day) => {
+        const existingDay = transformedDays.find((d) => d.day_of_week === day);
+        return existingDay || emptyPlan[daysOfWeek.indexOf(day)];
+      });
     },
     enabled: !!mealPlanId,
   });

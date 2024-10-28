@@ -270,7 +270,7 @@ RETURNS TABLE (
     recipe_name TEXT,
     recipe_type TEXT,
     instructions TEXT[],
-    ingredients JSONB,
+    ingredients TEXT[],
     nutrition JSONB,
     image TEXT,
     favorited_at TIMESTAMP WITH TIME ZONE

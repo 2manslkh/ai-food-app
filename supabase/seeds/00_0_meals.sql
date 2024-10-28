@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS recipes (
     name TEXT NOT NULL,
     type TEXT,
     instructions TEXT[],
-    ingredients TEXT[],  -- Added this line
+    ingredients TEXT[], 
     prep_time INTEGER,
     cook_time INTEGER,
     servings INTEGER,

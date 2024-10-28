@@ -71,9 +71,7 @@ export interface AggregatedMeal {
   nutrition: NutritionInfo;
 }
 
-export interface WeeklyPlan {
-  [key: string]: MealDay;
-}
+export type WeeklyPlan = MealDay[];
 
 // You can also create a type for the days of the week to ensure type safety
 export type DayOfWeek =
