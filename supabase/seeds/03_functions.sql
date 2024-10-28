@@ -686,6 +686,40 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Function to get meal plans for the current user
+CREATE OR REPLACE FUNCTION get_meal_plans()
+RETURNS TABLE (
+    id UUID,
+    user_id UUID,
+    name TEXT,
+    start_date DATE,
+    end_date DATE,
+    total_days INTEGER,
+    total_meals INTEGER,
+    total_calories INTEGER,
+    created_at TIMESTAMP WITH TIME ZONE
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        mp.id,
+        mp.user_id,
+        mp.name,
+        mp.start_date,
+        mp.end_date,
+        COUNT(DISTINCT md.id)::INTEGER as total_days,
+        COUNT(mdm.id)::INTEGER as total_meals,
+        COALESCE(SUM(md.total_calories), 0)::INTEGER as total_calories,
+        mp.created_at
+    FROM meal_plans mp
+    LEFT JOIN meal_days md ON mp.id = md.meal_plan_id
+    LEFT JOIN meal_day_meals mdm ON md.id = mdm.meal_day_id
+    WHERE mp.user_id = auth.uid()
+    GROUP BY mp.id, mp.user_id, mp.name, mp.start_date, mp.end_date, mp.created_at
+    ORDER BY mp.created_at DESC;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Grant execute permissions
 GRANT EXECUTE ON FUNCTION create_meal_plan(UUID, TEXT, DATE, DATE) TO authenticated;
 GRANT EXECUTE ON FUNCTION edit_meal_plan(UUID, TEXT, DATE, DATE) TO authenticated;
@@ -700,4 +734,4 @@ GRANT EXECUTE ON FUNCTION save_meal_plan_days(UUID, JSONB) TO authenticated;
 GRANT EXECUTE ON FUNCTION add_meals_to_meal_day(UUID, JSONB) TO authenticated;
 GRANT EXECUTE ON FUNCTION get_meal_plan_days(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION update_meal_day(UUID, JSONB) TO authenticated;
-
+GRANT EXECUTE ON FUNCTION get_meal_plans() TO authenticated;

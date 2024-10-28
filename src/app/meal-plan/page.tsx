@@ -6,6 +6,7 @@ import { WeeklyMealPlanner } from "@/components/WeeklyMealPlanner";
 import { useFetchMealPlans } from "@/hooks/useApi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MealPlanSummary } from "@/types";
 
 const MealPlanPage: React.FC = () => {
   const { data: mealPlans, isLoading, error } = useFetchMealPlans();
@@ -26,22 +27,38 @@ const MealPlanPage: React.FC = () => {
           <h1 className="mb-4 text-2xl font-bold">Your Meal Plans</h1>
           {mealPlans && mealPlans.length > 0 ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {mealPlans.map((plan) => (
+              {mealPlans.map((plan: MealPlanSummary) => (
                 <Card key={plan.id}>
                   <CardHeader>
                     <CardTitle>{plan.name}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p>Start Date: {new Date(plan.start_date).toLocaleDateString()}</p>
-                    <p>End Date: {new Date(plan.end_date).toLocaleDateString()}</p>
-                    <Button
-                      className="mt-2"
-                      onClick={() => {
-                        /* TODO: Implement view/edit functionality */
-                      }}
-                    >
-                      View/Edit
-                    </Button>
+                    <div className="space-y-2">
+                      <p>Start Date: {new Date(plan.start_date).toLocaleDateString()}</p>
+                      <p>End Date: {new Date(plan.end_date).toLocaleDateString()}</p>
+                      <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <p className="text-muted-foreground">Days</p>
+                          <p className="font-medium">{plan.total_days}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Meals</p>
+                          <p className="font-medium">{plan.total_meals}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Total Calories</p>
+                          <p className="font-medium">{plan.total_calories}</p>
+                        </div>
+                      </div>
+                      <Button
+                        className="mt-4 w-full"
+                        onClick={() => {
+                          /* TODO: Implement view/edit functionality */
+                        }}
+                      >
+                        View/Edit
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}

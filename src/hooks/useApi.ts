@@ -86,19 +86,44 @@ export function useDeleteMealPlan() {
   });
 }
 
+// Update the MealPlan interface in types/mealPlanTypes.ts first
+interface MealPlanSummary {
+  id: string;
+  user_id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  total_days: number;
+  total_meals: number;
+  total_calories: number;
+  created_at: string;
+}
+
 // Fetch Meal Plans
 export function useFetchMealPlans() {
   const { supabase } = useSupabase();
 
-  return useQuery<MealPlan[], Error>({
+  return useQuery<MealPlanSummary[], Error>({
     queryKey: ["mealPlans"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("meal_plans")
-        .select("*")
-        .order("start_date", { ascending: true });
+      const { data, error } = await supabase.rpc("get_meal_plans");
+
       if (error) throw error;
-      return data;
+      if (!data) return [];
+
+      return data.map(
+        (plan): MealPlanSummary => ({
+          id: plan.id,
+          user_id: plan.user_id,
+          name: plan.name,
+          start_date: plan.start_date,
+          end_date: plan.end_date,
+          total_days: plan.total_days,
+          total_meals: plan.total_meals,
+          total_calories: plan.total_calories,
+          created_at: plan.created_at,
+        })
+      );
     },
   });
 }

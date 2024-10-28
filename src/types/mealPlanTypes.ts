@@ -1,9 +1,10 @@
 // Represents a meal plan with its basic details
 export interface MealPlan {
   id: string;
+  user_id: string | null;
   name: string;
-  start_date: Date;
-  end_date: Date;
+  start_date: string | null;
+  end_date: string | null;
   days: MealDay[];
 }
 

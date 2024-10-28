@@ -570,6 +570,20 @@ export type Database = {
           meals: Json
         }[]
       }
+      get_meal_plans: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          user_id: string
+          name: string
+          start_date: string
+          end_date: string
+          total_days: number
+          total_meals: number
+          total_calories: number
+          created_at: string
+        }[]
+      }
       get_user_favorite_meals: {
         Args: {
           p_user_id: string

@@ -9,16 +9,23 @@ export interface NutritionInfo {
   fats: number;
 }
 
-export interface Meal {
+export interface Recipe {
   id: string;
   name: string;
   type: string;
+  instructions: string[];
+  ingredients: string[];
   nutrition: NutritionInfo;
   image?: string;
-  recipe: {
-    instructions: string[];
-    ingredients: string[];
-  };
+}
+
+export interface Meal {
+  id: string;
+  recipeId: string;
+  recipe: Recipe;
+  mealType: string; // breakfast, lunch, dinner, etc.
+  servingSize: number;
+  nutrition: NutritionInfo; // calculated based on serving size
   mealDayId?: string;
 }
 
