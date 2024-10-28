@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
-import { Meal } from "@/types/types";
+import { Meal } from "@/types";
 
 interface MealCardCompactProps {
   meal: Meal;

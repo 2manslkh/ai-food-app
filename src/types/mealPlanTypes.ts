@@ -2,8 +2,8 @@
 export interface MealPlan {
   id: string;
   name: string;
-  start_date: string;
-  end_date: string;
+  start_date: Date;
+  end_date: Date;
   days: MealDay[];
 }
 
@@ -11,7 +11,7 @@ export interface MealPlan {
 export interface MealDay {
   id: string;
   meal_plan_id: string;
-  date: string;
+  date: Date;
   total_calories: number;
   total_protein: number;
   total_carbs: number;
@@ -36,6 +36,12 @@ export interface Meal {
   image: string;
 }
 
+export interface Recipe {
+  author: string;
+  ingredients: string[];
+  instructions: string[];
+}
+
 export interface NutritionInfo {
   calories: number;
   protein: number;
@@ -45,8 +51,18 @@ export interface NutritionInfo {
   sugar?: number;
 }
 
-export interface Recipe {
-  author: string;
-  ingredients: string[];
-  instructions: string[];
+export interface AggregatedMeal {
+  id: string;
+  name: string;
+  type: string;
+  image: string;
+  recipe: Recipe;
+  meal_type: string;
+  serving_size: number;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+  recipe_id: string;
+  nutrition: NutritionInfo;
 }

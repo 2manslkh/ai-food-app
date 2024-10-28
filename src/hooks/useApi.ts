@@ -1,7 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { QueryObserverResult, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useUserId } from "./useUserId";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
-import { Meal, MealDay, MealPlan } from "@/types/types";
+import { AggregatedMeal, Meal, MealDay, MealPlan } from "@/types";
 
 // Create Meal Plan
 export function useCreateMealPlan() {
@@ -172,9 +172,8 @@ export function useAddMealToMealDay() {
     },
   });
 }
-
 // Fetch Meals for Meal Day
-export function useFetchMealsForMealDay(mealDayId: string) {
+export function useFetchMealsForMealDay(mealDayId: string): QueryObserverResult<Meal[], Error> {
   const { supabase } = useSupabase();
 
   return useQuery<Meal[], Error>({
@@ -184,21 +183,58 @@ export function useFetchMealsForMealDay(mealDayId: string) {
         .from("meal_day_meals")
         .select(
           `
-          meals (
+          id,
+          recipe_id,
+          meal_type,
+          serving_size,
+          calories,
+          protein,
+          carbs,
+          fats,
+          recipe:recipes (
             id,
-            recipe_id,
-            meal_type,
-            serving_size,
-            calories,
-            protein,
-            carbs,
-            fats
+            name,
+            type,
+            nutrition,
+            image,
+            author,
+            ingredients,
+            instructions
           )
         `
         )
         .eq("meal_day_id", mealDayId);
+
       if (error) throw error;
-      return data.map((item: { meals: Meal }) => item.meals);
+      if (!data) return [];
+
+      return data.map(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (item: any): AggregatedMeal => ({
+          id: item.id,
+          name: item.recipe.name,
+          type: item.recipe.type,
+          image: item.recipe.image,
+          recipe: {
+            author: item.recipe.author,
+            ingredients: item.recipe.ingredients,
+            instructions: item.recipe.instructions,
+          },
+          meal_type: item.meal_type,
+          serving_size: item.serving_size,
+          calories: item.calories,
+          protein: item.protein,
+          carbs: item.carbs,
+          fats: item.fats,
+          recipe_id: item.recipe_id,
+          nutrition: {
+            calories: item.calories,
+            protein: item.protein,
+            carbs: item.carbs,
+            fats: item.fats,
+          },
+        })
+      );
     },
   });
 }

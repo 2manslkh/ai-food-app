@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Meal } from "@/types/types";
+import { Meal } from "@/types";
 import { MealCardCompact } from "./MealCardCompact";
 
 interface AddMealDialogProps {

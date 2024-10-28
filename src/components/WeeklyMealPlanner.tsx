@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PieChartComponent as PieChart } from "@/components/ui/pie-chart";
-import { Meal } from "@/types/types";
+import { Meal } from "@/types";
 import { Progress } from "@/components/ui/progress";
 import { AddMealDialog } from "./AddMealDialog";
 import { mockMeals } from "@/lib/mocks";

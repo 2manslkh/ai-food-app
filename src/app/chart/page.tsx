@@ -11,8 +11,6 @@ const dataPie = [
 ];
 
 const PieChartPage: React.FC = () => {
-  console.log("🚀 | dataPie:", dataPie);
-
   return (
     <Card className="max-h-[300px] w-full">
       <CardHeader>
