@@ -1,7 +1,7 @@
 import { QueryObserverResult, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useUserId } from "./useUserId";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
-import { AggregatedMeal, Meal, MealPlanSummary, WeeklyPlan, MealDay } from "@/types";
+import { AggregatedMeal, Meal, MealPlanSummary, WeeklyPlan, MealDay, Json } from "@/types";
 
 // Create Meal Plan
 export function useCreateMealPlan() {
@@ -408,7 +408,7 @@ export function useAddMealsToMealDay() {
     mutationFn: async ({ mealDayId, meals }: { mealDayId: string; meals: Meal[] }) => {
       const { data, error } = await supabase.rpc("add_meals_to_meal_day", {
         p_meal_day_id: mealDayId,
-        p_meals: JSON.stringify(meals),
+        p_meals: meals as unknown as Json[],
       });
       if (error) throw error;
       return data;
@@ -514,7 +514,7 @@ export function useUpdateMealDay() {
     mutationFn: async ({ mealDayId, meals }: { mealDayId: string; meals: Meal[] }) => {
       const { data, error } = await supabase.rpc("update_meal_day", {
         p_meal_day_id: mealDayId,
-        p_meals: JSON.stringify(meals),
+        p_meals: meals as unknown as Json[],
       });
       if (error) throw error;
       return data;

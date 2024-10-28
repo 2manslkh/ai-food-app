@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS nutrition_info (
 CREATE TABLE IF NOT EXISTS meal_plans (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES auth.users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     start_date DATE,
     end_date DATE,
     name TEXT NOT NULL DEFAULT 'Untitled Meal Plan'
