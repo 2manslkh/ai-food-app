@@ -4,17 +4,26 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Meal } from "@/types";
 import { MealCardCompact } from "./MealCardCompact";
+import { useAddMealsToMealDay } from "@/hooks/useApi";
+import { toast } from "@/hooks/use-toast";
 
 interface AddMealDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onAddMeals: (meals: Meal[]) => void;
   favoriteMeals: Meal[];
+  mealDayId: string;
 }
 
-export function AddMealDialog({ isOpen, onClose, onAddMeals, favoriteMeals }: AddMealDialogProps) {
-  console.log("🚀 | AddMealDialog | favoriteMeals:", favoriteMeals);
+export function AddMealDialog({
+  isOpen,
+  onClose,
+  onAddMeals,
+  favoriteMeals,
+  mealDayId,
+}: AddMealDialogProps) {
   const [selectedMeals, setSelectedMeals] = useState<Set<string>>(new Set());
+  const addMealsToMealDay = useAddMealsToMealDay();
 
   const handleToggleMeal = (mealId: string) => {
     setSelectedMeals((prev) => {
@@ -28,11 +37,31 @@ export function AddMealDialog({ isOpen, onClose, onAddMeals, favoriteMeals }: Ad
     });
   };
 
-  const handleAddSelectedMeals = () => {
+  const handleAddSelectedMeals = async () => {
     const mealsToAdd = favoriteMeals.filter((meal) => selectedMeals.has(meal.id));
-    onAddMeals(mealsToAdd);
-    setSelectedMeals(new Set());
-    onClose();
+
+    try {
+      await addMealsToMealDay.mutateAsync({
+        mealDayId,
+        meals: mealsToAdd,
+      });
+
+      onAddMeals(mealsToAdd);
+      setSelectedMeals(new Set());
+      onClose();
+
+      toast({
+        title: "Success",
+        description: "Meals added successfully",
+      });
+    } catch (error) {
+      console.error("Failed to add meals:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add meals",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -55,8 +84,13 @@ export function AddMealDialog({ isOpen, onClose, onAddMeals, favoriteMeals }: Ad
           </div>
         </ScrollArea>
         <div className="mt-4 flex justify-end">
-          <Button onClick={handleAddSelectedMeals} disabled={selectedMeals.size === 0}>
-            Add Selected Meals ({selectedMeals.size})
+          <Button
+            onClick={handleAddSelectedMeals}
+            disabled={selectedMeals.size === 0 || addMealsToMealDay.isPending}
+          >
+            {addMealsToMealDay.isPending
+              ? "Adding..."
+              : `Add Selected Meals (${selectedMeals.size})`}
           </Button>
         </div>
       </DialogContent>

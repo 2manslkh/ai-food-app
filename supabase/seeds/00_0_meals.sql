@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS meal_days (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     meal_plan_id UUID REFERENCES meal_plans(id),
     date DATE,
+    day_of_week TEXT,
     total_calories INTEGER DEFAULT 0,
     total_protein NUMERIC DEFAULT 0,
     total_carbs NUMERIC DEFAULT 0,

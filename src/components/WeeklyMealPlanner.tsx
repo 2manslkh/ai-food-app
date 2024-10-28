@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, use } from "react";
+import React, { useState, useCallback, use, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
   useFetchMealPlans,
   useFetchUserFavoriteMeals,
   useSaveMealPlanDays,
+  useFetchMealPlanDays,
 } from "@/hooks/useApi";
 import { useUserId } from "@/hooks/useUserId";
 import { toast } from "@/hooks/use-toast";
@@ -69,6 +70,19 @@ export function WeeklyMealPlanner() {
   const saveMealPlanDaysMutation = useSaveMealPlanDays();
   const [currentMealPlanId, setCurrentMealPlanId] = useState<string | null>(null);
 
+  // Add state for tracking the current meal day ID
+  const [currentMealDayId, setCurrentMealDayId] = useState<string | null>(null);
+
+  const { data: mealPlanDays, isLoading: isLoadingMealPlanDays } =
+    useFetchMealPlanDays(currentMealPlanId);
+
+  console.log("🚀 | WeeklyMealPlanner | mealPlanDays:", mealPlanDays);
+  useEffect(() => {
+    if (mealPlanDays) {
+      setWeeklyPlan(mealPlanDays);
+    }
+  }, [mealPlanDays]);
+
   const handleCreateMealPlan = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -87,7 +101,9 @@ export function WeeklyMealPlanner() {
           startDate,
           endDate,
         });
-        setCurrentMealPlanId(result.id);
+        console.log("🚀 | result:", result);
+        console.log("🚀 | result:", result);
+        setCurrentMealPlanId(result);
         toast({
           title: "Success",
           description: "Meal plan created successfully",
@@ -129,7 +145,20 @@ export function WeeklyMealPlanner() {
   ];
 
   const handleAddMealClick = (day: string) => {
+    const dayMeals = weeklyPlan[day];
+    const mealDayId = dayMeals.length > 0 ? dayMeals[0].mealDayId : null;
+
+    if (!mealDayId) {
+      toast({
+        title: "Error",
+        description: "Could not find meal day ID",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSelectedDay(day);
+    setCurrentMealDayId(mealDayId);
     setIsAddMealDialogOpen(true);
   };
 
@@ -144,6 +173,8 @@ export function WeeklyMealPlanner() {
   };
 
   const handleSaveMealPlan = async () => {
+    console.log("🚀 | handleSaveMealPlan | currentMealPlanId:", currentMealPlanId);
+    console.log("🚀 | handleSaveMealPlan | currentMealPlanId:", weeklyPlan);
     if (!currentMealPlanId) {
       toast({
         title: "Error",
@@ -154,6 +185,7 @@ export function WeeklyMealPlanner() {
     }
 
     try {
+      console.log("🚀 | handleSaveMealPlan | currentMealPlanId:", currentMealPlanId);
       await saveMealPlanDaysMutation.mutateAsync({
         mealPlanId: currentMealPlanId,
         weeklyPlan,
@@ -257,7 +289,11 @@ export function WeeklyMealPlanner() {
                   <MealCardCompact key={index} meal={meal} />
                 ))}
               </div>
-              <Button className="mt-4" onClick={() => handleAddMealClick(day)}>
+              <Button
+                className="mt-4"
+                onClick={() => handleAddMealClick(day)}
+                disabled={!weeklyPlan[day]?.[0]?.mealDayId}
+              >
                 Add Meal
               </Button>
             </CardContent>
@@ -270,12 +306,14 @@ export function WeeklyMealPlanner() {
         onClose={() => setIsAddMealDialogOpen(false)}
         onAddMeals={handleAddMeals}
         favoriteMeals={favoriteMeals || []}
+        mealDayId={currentMealDayId} // You'll need to track this when a day is selected
       />
 
       <Button
         className="w-full"
         onClick={handleSaveMealPlan}
-        disabled={saveMealPlanDaysMutation.isPending}
+        disabled={false}
+        // disabled={saveMealPlanDaysMutation.isPending}
       >
         {saveMealPlanDaysMutation.isPending ? "Saving..." : "Save Meal Plan"}
       </Button>

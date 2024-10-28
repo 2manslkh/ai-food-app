@@ -405,6 +405,193 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Function to save meal plan days
+CREATE OR REPLACE FUNCTION save_meal_plan_days(
+    p_meal_plan_id UUID,
+    p_days JSONB
+) RETURNS BOOLEAN AS $$
+DECLARE
+    v_user_id UUID;
+    v_day RECORD;
+    v_meal RECORD;
+    v_meal_day_id UUID;
+    v_recipe_id UUID;
+BEGIN
+    -- Check if the meal plan belongs to the current user
+    SELECT user_id INTO v_user_id
+    FROM meal_plans
+    WHERE id = p_meal_plan_id;
+
+    IF v_user_id != auth.uid() THEN
+        RAISE EXCEPTION 'You do not have permission to modify this meal plan';
+    END IF;
+
+    -- Delete existing meal days and their meals
+    DELETE FROM meal_day_meals
+    WHERE meal_day_id IN (SELECT id FROM meal_days WHERE meal_plan_id = p_meal_plan_id);
+    
+    DELETE FROM meal_days
+    WHERE meal_plan_id = p_meal_plan_id;
+
+    -- Iterate through each day in the plan
+    FOR v_day IN SELECT * FROM jsonb_each(p_days)
+    LOOP
+        -- Create meal day
+        INSERT INTO meal_days (meal_plan_id, date, day_of_week)
+        VALUES (
+            p_meal_plan_id,
+            (SELECT start_date + (array_position(ARRAY['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], v_day.key) - 1) * INTERVAL '1 day'
+            FROM meal_plans WHERE id = p_meal_plan_id),
+            v_day.key
+        )
+        RETURNING id INTO v_meal_day_id;
+
+        -- Process meals for this day
+        FOR v_meal IN SELECT * FROM jsonb_array_elements(v_day.value)
+        LOOP
+            -- Create or get recipe
+            SELECT create_or_get_meal(
+                (v_meal.value->>'name')::TEXT,
+                COALESCE((v_meal.value->>'type')::TEXT, 'main'),
+                COALESCE((v_meal.value->'recipe'->>'instructions')::TEXT[], ARRAY[]::TEXT[]),
+                COALESCE((v_meal.value->'recipe'->>'ingredients')::TEXT[], ARRAY[]::TEXT[]),
+                COALESCE((v_meal.value->'nutrition'->>'calories')::INTEGER, 0),
+                COALESCE((v_meal.value->'nutrition'->>'protein')::NUMERIC, 0),
+                COALESCE((v_meal.value->'nutrition'->>'carbs')::NUMERIC, 0),
+                COALESCE((v_meal.value->'nutrition'->>'fats')::NUMERIC, 0),
+                (v_meal.value->>'image')::TEXT
+            ) INTO v_recipe_id;
+
+            -- Add meal to meal day
+            PERFORM add_meal_to_meal_day(
+                v_meal_day_id,
+                v_recipe_id,
+                COALESCE((v_meal.value->>'type')::TEXT, 'main'),
+                COALESCE((v_meal.value->>'serving_size')::NUMERIC, 1)
+            );
+        END LOOP;
+    END LOOP;
+
+    RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to add multiple meals to a meal day
+CREATE OR REPLACE FUNCTION add_meals_to_meal_day(
+    p_meal_day_id UUID,
+    p_meals JSONB
+) RETURNS BOOLEAN AS $$
+DECLARE
+    v_user_id UUID;
+    v_meal RECORD;
+    v_recipe_id UUID;
+BEGIN
+    -- Check if the meal day belongs to the current user's meal plan
+    SELECT mp.user_id INTO v_user_id
+    FROM meal_days md
+    JOIN meal_plans mp ON md.meal_plan_id = mp.id
+    WHERE md.id = p_meal_day_id;
+
+    IF v_user_id != auth.uid() THEN
+        RAISE EXCEPTION 'You do not have permission to add meals to this meal day';
+    END IF;
+
+    -- Process each meal
+    FOR v_meal IN SELECT * FROM jsonb_array_elements(p_meals)
+    LOOP
+        -- Create or get recipe
+        SELECT create_or_get_meal(
+            (v_meal.value->>'name')::TEXT,
+            COALESCE((v_meal.value->>'type')::TEXT, 'main'),
+            COALESCE((v_meal.value->'recipe'->>'instructions')::TEXT[], ARRAY[]::TEXT[]),
+            COALESCE((v_meal.value->'recipe'->>'ingredients')::TEXT[], ARRAY[]::TEXT[]),
+            COALESCE((v_meal.value->'nutrition'->>'calories')::INTEGER, 0),
+            COALESCE((v_meal.value->'nutrition'->>'protein')::NUMERIC, 0),
+            COALESCE((v_meal.value->'nutrition'->>'carbs')::NUMERIC, 0),
+            COALESCE((v_meal.value->'nutrition'->>'fats')::NUMERIC, 0),
+            (v_meal.value->>'image')::TEXT
+        ) INTO v_recipe_id;
+
+        -- Add meal to meal day
+        PERFORM add_meal_to_meal_day(
+            p_meal_day_id,
+            v_recipe_id,
+            COALESCE((v_meal.value->>'type')::TEXT, 'main'),
+            COALESCE((v_meal.value->>'serving_size')::NUMERIC, 1)
+        );
+    END LOOP;
+
+    RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to get meal days for a meal plan
+CREATE OR REPLACE FUNCTION get_meal_plan_days(
+    p_meal_plan_id UUID
+) RETURNS TABLE (
+    id UUID,
+    date DATE,
+    day_of_week TEXT,
+    total_calories INTEGER,
+    total_protein NUMERIC,
+    total_carbs NUMERIC,
+    total_fats NUMERIC,
+    meals JSONB
+) AS $$
+BEGIN
+    -- Check if the meal plan belongs to the current user
+    IF NOT EXISTS (
+        SELECT 1 FROM meal_plans mp
+        WHERE mp.id = p_meal_plan_id 
+        AND mp.user_id = auth.uid()
+    ) THEN
+        RAISE EXCEPTION 'You do not have permission to view this meal plan';
+    END IF;
+
+    RETURN QUERY
+    SELECT 
+        md.id,
+        md.date,
+        md.day_of_week,
+        md.total_calories,
+        md.total_protein,
+        md.total_carbs,
+        md.total_fats,
+        (
+            SELECT jsonb_agg(
+                jsonb_build_object(
+                    'id', m.id,
+                    'name', r.name,
+                    'type', r.type,
+                    'mealDayId', md.id,  -- Add mealDayId here
+                    'nutrition', (
+                        SELECT jsonb_build_object(
+                            'calories', n.calories,
+                            'protein', n.protein,
+                            'carbs', n.carbs,
+                            'fats', n.fats
+                        )
+                        FROM nutrition_info n
+                        WHERE n.recipe_id = r.id
+                    ),
+                    'image', r.image,
+                    'recipe', jsonb_build_object(
+                        'instructions', r.instructions,
+                        'ingredients', r.ingredients
+                    )
+                )
+            )
+            FROM meal_day_meals mdm
+            JOIN meals m ON mdm.meal_id = m.id
+            JOIN recipes r ON m.recipe_id = r.id
+            WHERE mdm.meal_day_id = md.id
+        ) as meals
+    FROM meal_days md
+    WHERE md.meal_plan_id = p_meal_plan_id
+    ORDER BY md.date;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Grant execute permissions
 GRANT EXECUTE ON FUNCTION create_meal_plan(UUID, TEXT, DATE, DATE) TO authenticated;
 GRANT EXECUTE ON FUNCTION edit_meal_plan(UUID, TEXT, DATE, DATE) TO authenticated;
@@ -415,3 +602,7 @@ GRANT EXECUTE ON FUNCTION toggle_favorite_meal(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION create_or_get_meal(TEXT, TEXT, TEXT[], TEXT[], INTEGER, NUMERIC, NUMERIC, NUMERIC, TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION handle_meal_interaction(TEXT, TEXT, TEXT[], TEXT[], INTEGER, NUMERIC, NUMERIC, NUMERIC, TEXT, BOOLEAN) TO authenticated;
 GRANT EXECUTE ON FUNCTION get_user_favorite_meals(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION save_meal_plan_days(UUID, JSONB) TO authenticated;
+GRANT EXECUTE ON FUNCTION add_meals_to_meal_day(UUID, JSONB) TO authenticated;
+GRANT EXECUTE ON FUNCTION get_meal_plan_days(UUID) TO authenticated;
+

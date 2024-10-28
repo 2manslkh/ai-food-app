@@ -494,6 +494,13 @@ export type Database = {
         }
         Returns: string
       }
+      add_meals_to_meal_day: {
+        Args: {
+          p_meal_day_id: string
+          p_meals: Json
+        }
+        Returns: boolean
+      }
       create_meal_plan: {
         Args: {
           p_user_id: string
@@ -545,6 +552,21 @@ export type Database = {
           favorited_at: string
         }[]
       }
+      get_meal_plan_days: {
+        Args: {
+          p_meal_plan_id: string
+        }
+        Returns: {
+          id: string
+          date: string
+          day_of_week: string
+          total_calories: number
+          total_protein: number
+          total_carbs: number
+          total_fats: number
+          meals: Json
+        }[]
+      }
       get_user_favorite_meals: {
         Args: {
           p_user_id: string
@@ -574,6 +596,13 @@ export type Database = {
           p_is_favorite?: boolean
         }
         Returns: Json
+      }
+      save_meal_plan_days: {
+        Args: {
+          p_meal_plan_id: string
+          p_days: Json
+        }
+        Returns: boolean
       }
       toggle_favorite_meal: {
         Args: {

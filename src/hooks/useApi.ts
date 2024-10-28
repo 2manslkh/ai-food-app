@@ -244,6 +244,8 @@ export function useSaveMealPlanDays() {
   const queryClient = useQueryClient();
   const { supabase } = useSupabase();
 
+  console.log("useSaveMealPlanDays");
+
   return useMutation({
     mutationFn: async ({
       mealPlanId,
@@ -252,48 +254,14 @@ export function useSaveMealPlanDays() {
       mealPlanId: string;
       weeklyPlan: { [key: string]: Meal[] };
     }) => {
-      // First, create meal days for each day of the week
-      const mealDaysPromises = Object.entries(weeklyPlan).map(async ([day, meals]) => {
-        // Convert day name to date
-        const dayIndex = [
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday",
-          "Sunday",
-        ].indexOf(day);
-        const date = new Date();
-        date.setDate(date.getDate() + (dayIndex - date.getDay() + 1));
-
-        // Create meal day
-        const { data: mealDay, error: mealDayError } = await supabase.rpc(
-          "add_meal_day_to_meal_plan",
-          {
-            p_meal_plan_id: mealPlanId,
-            p_date: date.toISOString().split("T")[0],
-          }
-        );
-
-        if (mealDayError) throw mealDayError;
-
-        // Add meals to the meal day
-        const mealsPromises = meals.map((meal) =>
-          supabase.rpc("add_meal_to_meal_day", {
-            p_meal_day_id: mealDay.id,
-            p_recipe_id: meal.id,
-            p_meal_type: meal.type,
-            p_serving_size: 1, // Default serving size
-          })
-        );
-
-        await Promise.all(mealsPromises);
-        return mealDay;
+      console.log("🚀 | useSaveMealPlanDays | weeklyPlan:", weeklyPlan);
+      const { data, error } = await supabase.rpc("save_meal_plan_days", {
+        p_meal_plan_id: mealPlanId,
+        p_days: JSON.stringify(weeklyPlan),
       });
 
-      await Promise.all(mealDaysPromises);
-      return true;
+      if (error) throw error;
+      return data;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["mealDays", variables.mealPlanId] });
@@ -418,5 +386,74 @@ export function useFetchUserFavoriteMeals() {
       );
     },
     enabled: !!userId,
+  });
+}
+
+// Add Multiple Meals to Meal Day
+export function useAddMealsToMealDay() {
+  const queryClient = useQueryClient();
+  const { supabase } = useSupabase();
+
+  return useMutation({
+    mutationFn: async ({ mealDayId, meals }: { mealDayId: string; meals: Meal[] }) => {
+      const { data, error } = await supabase.rpc("add_meals_to_meal_day", {
+        p_meal_day_id: mealDayId,
+        p_meals: meals,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["meals", variables.mealDayId] });
+    },
+  });
+}
+
+// Fetch Meal Plan Days
+export function useFetchMealPlanDays(mealPlanId: string | null) {
+  const { supabase } = useSupabase();
+  const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+  return useQuery({
+    queryKey: ["mealPlanDays", mealPlanId],
+    queryFn: async () => {
+      if (!mealPlanId) throw new Error("No meal plan ID provided");
+
+      const { data, error } = await supabase.rpc("get_meal_plan_days", {
+        p_meal_plan_id: mealPlanId,
+      });
+      console.log("🚀 | queryFn: | data:", data);
+
+      if (error) throw error;
+
+      // Initialize empty plan with all days
+      const emptyPlan = daysOfWeek.reduce(
+        (acc, day) => {
+          acc[day] = [];
+          return acc;
+        },
+        {} as { [key: string]: Meal[] }
+      );
+
+      // If no data, return empty plan
+      if (!data || !Array.isArray(data)) return emptyPlan;
+
+      // Merge data with empty plan to ensure all days exist
+      return data.reduce((acc, day) => {
+        if (!day || !day.day_of_week) return acc;
+
+        const dayOfWeek = day.day_of_week;
+        const meals = Array.isArray(day.meals) ? day.meals : [];
+
+        // Add meal day ID to each meal
+        acc[dayOfWeek] = meals.map((meal: any) => ({
+          ...meal,
+          mealDayId: day.id,
+        }));
+
+        return acc;
+      }, emptyPlan);
+    },
+    enabled: !!mealPlanId,
   });
 }
