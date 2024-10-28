@@ -83,6 +83,15 @@ const config: Config = {
         container: "2rem",
         "container-lg": "4rem",
       },
+      keyframes: {
+        "float-up": {
+          "0%": { transform: "translateY(0) scale(1)", opacity: "1" },
+          "100%": { transform: "translateY(-100px) scale(0.5)", opacity: "0" },
+        },
+      },
+      animation: {
+        "float-up": "float-up 1s ease-out forwards",
+      },
     },
   },
   plugins: [animate],

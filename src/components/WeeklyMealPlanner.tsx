@@ -11,8 +11,9 @@ import { Progress } from "@/components/ui/progress";
 import { AddMealDialog } from "./AddMealDialog";
 import { mockMeals } from "@/lib/mocks";
 import { MealCardCompact } from "./MealCardCompact";
-import { useCreateMealPlan, useFetchMealPlans } from "@/hooks/useApi";
+import { useCreateMealPlan, useFetchMealPlans, useSaveMealPlanDays } from "@/hooks/useApi";
 import { useUserId } from "@/hooks/useUserId";
+import { toast } from "@/hooks/use-toast";
 
 interface NutritionTarget {
   calories: number;
@@ -60,26 +61,40 @@ export function WeeklyMealPlanner() {
   const userId = useUserId();
   const createMealPlanMutation = useCreateMealPlan();
   const { isLoading, error } = useFetchMealPlans();
+  const saveMealPlanDaysMutation = useSaveMealPlanDays();
+  const [currentMealPlanId, setCurrentMealPlanId] = useState<string | null>(null);
 
   const handleCreateMealPlan = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       if (!mealPlanName || !startDate || !endDate || !userId) {
-        alert("Please fill in all fields and ensure you're logged in");
+        toast({
+          title: "Error",
+          description: "Please fill in all fields and ensure you're logged in",
+          variant: "destructive",
+        });
         return;
       }
 
       try {
-        await createMealPlanMutation.mutateAsync({
+        const result = await createMealPlanMutation.mutateAsync({
           name: mealPlanName,
           startDate,
           endDate,
         });
-        console.log("Meal plan created successfully");
+        setCurrentMealPlanId(result.id);
+        toast({
+          title: "Success",
+          description: "Meal plan created successfully",
+        });
         setShowPlanner(true);
       } catch (error) {
         console.error("Failed to create meal plan:", error);
-        alert("Failed to create meal plan");
+        toast({
+          title: "Error",
+          description: "Failed to create meal plan",
+          variant: "destructive",
+        });
       }
     },
     [mealPlanName, startDate, endDate, userId, createMealPlanMutation]
@@ -123,10 +138,33 @@ export function WeeklyMealPlanner() {
     }
   };
 
-  const handleSaveMealPlan = () => {
-    // TODO: Implement the logic to save the meal plan
-    console.log("Saving meal plan:", weeklyPlan);
-    // You can add an API call here to save the meal plan to a backend
+  const handleSaveMealPlan = async () => {
+    if (!currentMealPlanId) {
+      toast({
+        title: "Error",
+        description: "No active meal plan to save",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await saveMealPlanDaysMutation.mutateAsync({
+        mealPlanId: currentMealPlanId,
+        weeklyPlan,
+      });
+      toast({
+        title: "Success",
+        description: "Meal plan saved successfully",
+      });
+    } catch (error) {
+      console.error("Failed to save meal plan:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save meal plan",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!showPlanner) {
@@ -229,8 +267,12 @@ export function WeeklyMealPlanner() {
         favoriteMeals={favoriteMeals}
       />
 
-      <Button className="w-full" onClick={handleSaveMealPlan}>
-        Save Meal Plan
+      <Button
+        className="w-full"
+        onClick={handleSaveMealPlan}
+        disabled={saveMealPlanDaysMutation.isPending}
+      >
+        {saveMealPlanDaysMutation.isPending ? "Saving..." : "Save Meal Plan"}
       </Button>
     </div>
   );

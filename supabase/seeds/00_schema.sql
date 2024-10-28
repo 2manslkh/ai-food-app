@@ -123,6 +123,15 @@ CREATE TABLE IF NOT EXISTS shopping_items (
     unit TEXT
 );
 
+-- User favorite meals table
+CREATE TABLE IF NOT EXISTS user_favorite_meals (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES auth.users(id),
+    recipe_id UUID REFERENCES recipes(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
+    UNIQUE(user_id, recipe_id)
+);
+
 -- Enable Row Level Security for all tables
 ALTER TABLE user_preferences ENABLE ROW LEVEL SECURITY;
 ALTER TABLE health_data ENABLE ROW LEVEL SECURITY;
@@ -132,6 +141,7 @@ ALTER TABLE meals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE shopping_lists ENABLE ROW LEVEL SECURITY;
 ALTER TABLE shopping_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE meal_day_meals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_favorite_meals ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for each table
 CREATE POLICY user_preferences_policy ON user_preferences FOR ALL USING (auth.uid() = user_id);
@@ -142,6 +152,8 @@ CREATE POLICY meals_policy ON meals FOR ALL USING (true);
 CREATE POLICY shopping_lists_policy ON shopping_lists FOR ALL USING (meal_plan_id IN (SELECT id FROM meal_plans WHERE user_id = auth.uid()));
 CREATE POLICY shopping_items_policy ON shopping_items FOR ALL USING (shopping_list_id IN (SELECT sl.id FROM shopping_lists sl JOIN meal_plans mp ON sl.meal_plan_id = mp.id WHERE mp.user_id = auth.uid()));
 CREATE POLICY meal_day_meals_policy ON meal_day_meals FOR ALL USING (meal_day_id IN (SELECT md.id FROM meal_days md JOIN meal_plans mp ON md.meal_plan_id = mp.id WHERE mp.user_id = auth.uid()));
+CREATE POLICY user_favorite_meals_policy ON user_favorite_meals 
+    FOR ALL USING (auth.uid() = user_id);
 
 -- Grant necessary permissions to authenticated users
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
@@ -155,6 +167,7 @@ REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM PUBLIC;
 CREATE INDEX IF NOT EXISTS idx_meal_days_meal_plan_id ON meal_days(meal_plan_id);
 CREATE INDEX IF NOT EXISTS idx_meal_day_meals_meal_day_id ON meal_day_meals(meal_day_id);
 CREATE INDEX IF NOT EXISTS idx_meal_day_meals_meal_id ON meal_day_meals(meal_id);
+CREATE INDEX IF NOT EXISTS idx_user_favorite_meals_user_id ON user_favorite_meals(user_id);
 
 -- Create a function to update meal_day totals
 CREATE OR REPLACE FUNCTION update_meal_day_totals()
@@ -373,9 +386,80 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Function to toggle favorite meal
+CREATE OR REPLACE FUNCTION toggle_favorite_meal(
+    p_recipe_id UUID
+) RETURNS BOOLEAN AS $$
+DECLARE
+    v_exists BOOLEAN;
+BEGIN
+    -- Check if the meal is already favorited
+    SELECT EXISTS (
+        SELECT 1 
+        FROM user_favorite_meals 
+        WHERE user_id = auth.uid() 
+        AND recipe_id = p_recipe_id
+    ) INTO v_exists;
+
+    IF v_exists THEN
+        -- Remove from favorites
+        DELETE FROM user_favorite_meals 
+        WHERE user_id = auth.uid() 
+        AND recipe_id = p_recipe_id;
+        RETURN FALSE;
+    ELSE
+        -- Add to favorites
+        INSERT INTO user_favorite_meals (user_id, recipe_id)
+        VALUES (auth.uid(), p_recipe_id);
+        RETURN TRUE;
+    END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to get user's favorite meals
+CREATE OR REPLACE FUNCTION get_favorite_meals()
+RETURNS TABLE (
+    recipe_id UUID,
+    recipe_name TEXT,
+    recipe_type TEXT,
+    instructions TEXT[],
+    ingredients JSONB,
+    nutrition JSONB,
+    image TEXT,
+    favorited_at TIMESTAMP WITH TIME ZONE
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        r.id as recipe_id,
+        r.name as recipe_name,
+        r.type as recipe_type,
+        r.instructions,
+        r.ingredients,
+        (
+            SELECT jsonb_build_object(
+                'calories', n.calories,
+                'protein', n.protein,
+                'carbs', n.carbs,
+                'fats', n.fats
+            )
+            FROM nutrition_info n
+            WHERE n.recipe_id = r.id
+        ) as nutrition,
+        r.image,
+        ufm.created_at as favorited_at
+    FROM user_favorite_meals ufm
+    JOIN recipes r ON ufm.recipe_id = r.id
+    WHERE ufm.user_id = auth.uid()
+    ORDER BY ufm.created_at DESC;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Grant execute permissions to authenticated users
 GRANT EXECUTE ON FUNCTION create_meal_plan(UUID, TEXT, DATE, DATE) TO authenticated;
 GRANT EXECUTE ON FUNCTION edit_meal_plan(UUID, TEXT, DATE, DATE) TO authenticated;
 GRANT EXECUTE ON FUNCTION delete_meal_plan(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION add_meal_to_meal_day(UUID, UUID, TEXT, NUMERIC) TO authenticated;
 GRANT EXECUTE ON FUNCTION add_meal_day_to_meal_plan(UUID, DATE) TO authenticated;
+GRANT EXECUTE ON FUNCTION toggle_favorite_meal(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION get_favorite_meals() TO authenticated;

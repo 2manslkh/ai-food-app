@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Meal } from "@/types";
 import { MealCard } from "./MealCard";
 import { X, Heart } from "lucide-react";
+import { InteractiveButton } from "@/components/ui/InteractiveButton";
 
 interface DishSwiperProps {
   dishes: Meal[];
@@ -46,12 +46,13 @@ export function DishSwiper({ dishes, onComplete }: DishSwiperProps) {
       <div className="relative mb-4 w-full">
         <MealCard meal={currentDish} />
         <div className="absolute bottom-4 right-4 flex space-x-4">
-          <Button onClick={handleDislike} variant="outline" size="icon">
-            <X className="h-4 w-4" />
-          </Button>
-          <Button onClick={handleLike} size="icon">
-            <Heart className="h-4 w-4" />
-          </Button>
+          <InteractiveButton onClick={handleDislike} icon={X} variant="outline" />
+          <InteractiveButton
+            onClick={handleLike}
+            icon={Heart}
+            showFloatingIcon
+            floatingIconClassName="h-4 w-4 text-red-500 fill-red-500"
+          />
         </div>
       </div>
     </div>

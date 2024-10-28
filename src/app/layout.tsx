@@ -5,6 +5,7 @@ import "./globals.css";
 import { Navbar } from "../components/navigation/Navbar";
 import { ThemeProvider } from "../components/providers/ThemeProvider";
 import { Providers } from "@/components/Providers";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Navbar />
               <main className="flex-grow">{children}</main>
             </div>
+            <Toaster />
           </body>
         </Providers>
       </ThemeProvider>

@@ -238,3 +238,112 @@ export function useFetchMealsForMealDay(mealDayId: string): QueryObserverResult<
     },
   });
 }
+
+// Save Meal Plan Days
+export function useSaveMealPlanDays() {
+  const queryClient = useQueryClient();
+  const { supabase } = useSupabase();
+
+  return useMutation({
+    mutationFn: async ({
+      mealPlanId,
+      weeklyPlan,
+    }: {
+      mealPlanId: string;
+      weeklyPlan: { [key: string]: Meal[] };
+    }) => {
+      // First, create meal days for each day of the week
+      const mealDaysPromises = Object.entries(weeklyPlan).map(async ([day, meals]) => {
+        // Convert day name to date
+        const dayIndex = [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+          "Sunday",
+        ].indexOf(day);
+        const date = new Date();
+        date.setDate(date.getDate() + (dayIndex - date.getDay() + 1));
+
+        // Create meal day
+        const { data: mealDay, error: mealDayError } = await supabase.rpc(
+          "add_meal_day_to_meal_plan",
+          {
+            p_meal_plan_id: mealPlanId,
+            p_date: date.toISOString().split("T")[0],
+          }
+        );
+
+        if (mealDayError) throw mealDayError;
+
+        // Add meals to the meal day
+        const mealsPromises = meals.map((meal) =>
+          supabase.rpc("add_meal_to_meal_day", {
+            p_meal_day_id: mealDay.id,
+            p_recipe_id: meal.id,
+            p_meal_type: meal.type,
+            p_serving_size: 1, // Default serving size
+          })
+        );
+
+        await Promise.all(mealsPromises);
+        return mealDay;
+      });
+
+      await Promise.all(mealDaysPromises);
+      return true;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["mealDays", variables.mealPlanId] });
+      queryClient.invalidateQueries({ queryKey: ["mealPlans"] });
+    },
+  });
+}
+
+// Toggle favorite meal
+export function useToggleFavoriteMeal() {
+  const queryClient = useQueryClient();
+  const { supabase } = useSupabase();
+
+  return useMutation({
+    mutationFn: async (recipeId: string) => {
+      const { data, error } = await supabase.rpc("toggle_favorite_meal", {
+        p_recipe_id: recipeId,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["favoriteMeals"] });
+    },
+  });
+}
+
+// Fetch favorite meals
+export function useFetchFavoriteMeals() {
+  const { supabase } = useSupabase();
+
+  return useQuery<Meal[], Error>({
+    queryKey: ["favoriteMeals"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_favorite_meals");
+
+      if (error) throw error;
+      if (!data) return [];
+
+      return data.map(
+        (item): Meal => ({
+          id: item.recipe_id,
+          name: item.recipe_name,
+          type: item.recipe_type,
+          instructions: item.instructions,
+          ingredients: item.ingredients,
+          nutrition: item.nutrition,
+          image: item.image,
+        })
+      );
+    },
+  });
+}
