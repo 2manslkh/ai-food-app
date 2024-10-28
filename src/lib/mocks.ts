@@ -1,4 +1,4 @@
-import { MealPlan, Meal } from '@/types/types';
+import { MealPlan, Meal } from '@/types/mealPlanTypes';
 
 
 export const mockMealPlan: MealPlan = {
@@ -22,7 +22,7 @@ export const mockMealPlan: MealPlan = {
         },
         {
           id: '2',
-          name: "Grilled Chicken Salad",
+          name: "Grilled Chicken Salad", 
           type: "lunch",
           recipe: {
             ingredients: [

@@ -16,7 +16,9 @@
     "db:deploy:functions": "supabase functions deploy --project-ref your-project-ref",
     "db:serve:functions": "supabase functions serve",
     "db:serve:function": "supabase functions serve",
-    "db:test:functions": "./test_functions.sh"
+    "db:test:functions": "./test_functions.sh",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.1.2",
@@ -34,6 +36,7 @@
     "clsx": "^2.1.1",
     "lucide-react": "^0.453.0",
     "next": "14.2.16",
+    "prettier-plugin-tailwindcss": "^0.6.8",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "recharts": "^2.13.0-alpha.5",

@@ -11,14 +11,14 @@ interface DishSwiperProps {
   onComplete: (favorites: Meal[]) => void;
 }
 
-export function DishSwiper({ dishes, onComplete }: DishSwiperProps) {
+export function DishSwiper({ dishes, onComplete }: DishSwiperProps)  {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [favorites, setFavorites] = useState<Meal[]>([]);
 
   const handleLike = () => {
     setFavorites([...favorites, dishes[currentIndex]]);
     nextDish();
-  };
+  }; 
 
   const handleDislike = () => {
     nextDish();
