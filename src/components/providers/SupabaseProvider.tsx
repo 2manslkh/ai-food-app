@@ -28,7 +28,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       setUser(serverSession?.user ?? null);
     };
 
-    setServerSession();
+    // Add .catch() handler to the promise
+    setServerSession().catch(console.error);
 
     const {
       data: { subscription },

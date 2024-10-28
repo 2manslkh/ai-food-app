@@ -29,6 +29,20 @@ export interface Meal {
   protein: number;
   carbs: number;
   fats: number;
+  recipe_id: string;
+  name: string;
+  type: string;
+  nutrition: NutritionInfo;
+  image: string;
+}
+
+export interface NutritionInfo {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+  fiber?: number;
+  sugar?: number;
 }
 
 export interface Recipe {
