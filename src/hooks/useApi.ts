@@ -1,7 +1,16 @@
 import { QueryObserverResult, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useUserId } from "./useUserId";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
-import { AggregatedMeal, Meal, MealDay, MealPlan, NutritionInfo, WeeklyPlan } from "@/types";
+import {
+  AggregatedMeal,
+  Json,
+  Meal,
+  MealDay,
+  MealPlan,
+  MealPlanSummary,
+  NutritionInfo,
+  WeeklyPlan,
+} from "@/types";
 
 // Create Meal Plan
 export function useCreateMealPlan() {
@@ -86,19 +95,6 @@ export function useDeleteMealPlan() {
   });
 }
 
-// Update the MealPlan interface in types/mealPlanTypes.ts first
-interface MealPlanSummary {
-  id: string;
-  user_id: string;
-  name: string;
-  start_date: string;
-  end_date: string;
-  total_days: number;
-  total_meals: number;
-  total_calories: number;
-  created_at: string;
-}
-
 // Fetch Meal Plans
 export function useFetchMealPlans() {
   const { supabase } = useSupabase();
@@ -144,24 +140,6 @@ export function useAddMealDay() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["mealDays", variables.mealPlanId] });
-    },
-  });
-}
-
-// Fetch Meal Days
-export function useFetchMealDays(mealPlanId: string) {
-  const { supabase } = useSupabase();
-
-  return useQuery<MealDay[], Error>({
-    queryKey: ["mealDays", mealPlanId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("meal_days")
-        .select("*")
-        .eq("meal_plan_id", mealPlanId)
-        .order("date", { ascending: true });
-      if (error) throw error;
-      return data;
     },
   });
 }
@@ -326,14 +304,24 @@ export function useFetchFavoriteMeals() {
       if (!data) return [];
 
       return data.map(
-        (item): Meal => ({
+        (item: any): Meal => ({
           id: item.recipe_id,
           name: item.recipe_name,
           type: item.recipe_type,
-          instructions: item.instructions,
-          ingredients: item.ingredients,
+          recipe_id: item.recipe_id,
+          recipe: {
+            author: "",
+            instructions: item.instructions,
+            ingredients: item.ingredients,
+          },
           nutrition: item.nutrition,
           image: item.image,
+          meal_type: "",
+          serving_size: 0,
+          calories: 0,
+          protein: 0,
+          carbs: 0,
+          fats: 0,
         })
       );
     },
@@ -393,19 +381,24 @@ export function useFetchUserFavoriteMeals() {
       if (!data) return [];
 
       return data.map(
-        (item): Meal => ({
+        (item: any): Meal => ({
           id: item.recipe_id,
           name: item.recipe_name,
           type: item.recipe_type,
-          instructions: item.instructions,
-          ingredients: item.ingredients,
-          image: item.image,
-          nutrition: {
-            calories: item.nutrition?.calories || 0,
-            protein: item.nutrition?.protein || 0,
-            carbs: item.nutrition?.carbs || 0,
-            fats: item.nutrition?.fats || 0,
+          recipe_id: item.recipe_id,
+          recipe: {
+            author: "",
+            instructions: item.instructions,
+            ingredients: item.ingredients,
           },
+          nutrition: item.nutrition,
+          image: item.image,
+          meal_type: "",
+          serving_size: 0,
+          calories: 0,
+          protein: 0,
+          carbs: 0,
+          fats: 0,
         })
       );
     },
@@ -422,7 +415,7 @@ export function useAddMealsToMealDay() {
     mutationFn: async ({ mealDayId, meals }: { mealDayId: string; meals: Meal[] }) => {
       const { data, error } = await supabase.rpc("add_meals_to_meal_day", {
         p_meal_day_id: mealDayId,
-        p_meals: meals,
+        p_meals: JSON.stringify(meals),
       });
       if (error) throw error;
       return data;
@@ -459,7 +452,7 @@ export function useFetchMealPlanDays(mealPlanId: string | null) {
             mealDayId: "",
           },
         }),
-        {} as WeeklyPlan
+        {} as any
       );
 
       // If no data, return empty plan
@@ -505,7 +498,7 @@ export function useUpdateMealDay() {
     mutationFn: async ({ mealDayId, meals }: { mealDayId: string; meals: Meal[] }) => {
       const { data, error } = await supabase.rpc("update_meal_day", {
         p_meal_day_id: mealDayId,
-        p_meals: meals,
+        p_meals: JSON.stringify(meals),
       });
       if (error) throw error;
       return data;

@@ -2,14 +2,17 @@ import { MealPlan, Meal } from "@/types";
 
 export const mockMealPlan: MealPlan = {
   id: "mock-plan-1",
+  user_id: "mock-user-1",
   name: "Mock Meal Plan",
-  start_date: new Date(),
-  end_date: new Date(new Date().setDate(new Date().getDate() + 7)),
+  start_date: new Date().toISOString(),
+  end_date: new Date(new Date().setDate(new Date().getDate() + 6)).toISOString(),
   days: [
     {
       id: "day-1",
       meal_plan_id: "mock-plan-1",
       date: new Date(),
+      day_of_week: "Monday",
+      meal_day_id: "meal-day-1",
       total_calories: 1200,
       total_protein: 75,
       total_carbs: 100,

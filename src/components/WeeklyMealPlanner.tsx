@@ -304,8 +304,8 @@ export function WeeklyMealPlanner() {
               </div>
               <Button
                 className="mt-4"
-                onClick={() => handleAddMealClick(weeklyPlan[day]?.mealDayId, day)}
-                disabled={!weeklyPlan[day]?.mealDayId}
+                onClick={() => handleAddMealClick(weeklyPlan[day]?.meal_day_id, day)}
+                disabled={!weeklyPlan[day]?.meal_day_id}
               >
                 Add Meal
               </Button>
