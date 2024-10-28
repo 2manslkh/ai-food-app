@@ -51,17 +51,18 @@ export function WeeklyMealPlanner() {
   });
   const [showPlanner, setShowPlanner] = useState(false);
   const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPlan>(
-    daysOfWeek.reduce(
-      (acc, day) => ({
-        ...acc,
-        [day]: {
-          meals: [],
-          dayOfWeek: day,
-          mealDayId: "",
-        },
-      }),
-      {}
-    )
+    daysOfWeek.map((day) => ({
+      id: "",
+      meal_plan_id: "",
+      date: new Date(),
+      total_calories: 0,
+      total_protein: 0,
+      total_carbs: 0,
+      total_fats: 0,
+      meals: [],
+      day_of_week: day,
+      meal_day_id: "",
+    }))
   );
   const [isAddMealDialogOpen, setIsAddMealDialogOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
@@ -170,17 +171,12 @@ export function WeeklyMealPlanner() {
   };
 
   const handleAddMeals = (meals: Meal[]) => {
-    console.log("🚀 | handleAddMeals | meals:", meals);
-    console.log("🚀 | handleAddMeals | selectedDay:", selectedDay);
-    console.log("🚀 | handleAddMeals | weeklyPlan:", weeklyPlan[selectedDay || ""]);
     if (selectedDay) {
-      setWeeklyPlan((prev) => ({
-        ...prev,
-        [selectedDay]: {
-          ...prev[selectedDay],
-          meals: [...prev[selectedDay].meals, ...meals],
-        },
-      }));
+      setWeeklyPlan((prev) =>
+        prev.map((day) =>
+          day.day_of_week === selectedDay ? { ...day, meals: [...day.meals, ...meals] } : day
+        )
+      );
       setIsAddMealDialogOpen(false);
     }
   };
@@ -268,12 +264,15 @@ export function WeeklyMealPlanner() {
     <div className="space-y-4">
       <PieChart data={createChartData(nutritionTarget)} />
 
-      {daysOfWeek.map((day) => {
-        const dailyNutrition = calculateDailyNutrition(weeklyPlan[day].meals);
+      {daysOfWeek.map((dayName) => {
+        const day = weeklyPlan.find((d) => d.day_of_week === dayName);
+        if (!day) return null;
+
+        const dailyNutrition = calculateDailyNutrition(day.meals);
         return (
-          <Card key={day}>
+          <Card key={dayName}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 py-2 pr-2">
-              <CardTitle className="text-lg">{day}</CardTitle>
+              <CardTitle className="text-lg">{dayName}</CardTitle>
               <div className="flex items-center space-x-2">
                 {renderNutrientBar(
                   dailyNutrition.protein,
@@ -298,14 +297,14 @@ export function WeeklyMealPlanner() {
             </CardHeader>
             <CardContent className="pr-2">
               <div className="space-y-1">
-                {weeklyPlan[day].meals.map((meal, index) => (
-                  <MealCardCompact key={index} meal={meal} />
+                {day.meals.map((meal, index) => (
+                  <MealCardCompact key={`${meal.id}-${index}`} meal={meal} />
                 ))}
               </div>
               <Button
                 className="mt-4"
-                onClick={() => handleAddMealClick(weeklyPlan[day]?.meal_day_id, day)}
-                disabled={!weeklyPlan[day]?.meal_day_id}
+                onClick={() => handleAddMealClick(day.meal_day_id, day.day_of_week)}
+                disabled={!day.meal_day_id}
               >
                 Add Meal
               </Button>
@@ -320,7 +319,7 @@ export function WeeklyMealPlanner() {
         onAddMeals={handleAddMeals}
         favoriteMeals={favoriteMeals || []}
         mealDayId={currentMealDayId || ""}
-        currentMeals={weeklyPlan[selectedDay || ""]?.meals || []}
+        currentMeals={weeklyPlan.find((day) => day.day_of_week === selectedDay)?.meals || []}
       />
 
       <Button
