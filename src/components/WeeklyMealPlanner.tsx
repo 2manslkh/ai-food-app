@@ -2,9 +2,7 @@
 
 import React, { useState, useCallback, use, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { PieChartComponent as PieChart } from "@/components/ui/pie-chart";
 import { Meal, WeeklyPlan } from "@/types";
 import { Progress } from "@/components/ui/progress";
@@ -19,6 +17,7 @@ import {
 } from "@/hooks/useApi";
 import { useUserId } from "@/hooks/useUserId";
 import { toast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 interface NutritionTarget {
   calories: number;
@@ -87,6 +86,7 @@ export function WeeklyMealPlanner({ existingPlanId }: WeeklyMealPlannerProps) {
 
   // Add state for tracking the current meal day ID
   const [currentMealDayId, setCurrentMealDayId] = useState<string | null>(null);
+  const router = useRouter();
 
   const { data: mealPlanDays, isLoading: isLoadingMealPlanDays } =
     useFetchMealPlanDays(currentMealPlanId);
@@ -115,8 +115,7 @@ export function WeeklyMealPlanner({ existingPlanId }: WeeklyMealPlannerProps) {
           startDate,
           endDate,
         });
-        console.log("🚀 | result:", result);
-        console.log("🚀 | result:", result);
+
         setCurrentMealPlanId(result);
         toast({
           title: "Success",
@@ -200,7 +199,8 @@ export function WeeklyMealPlanner({ existingPlanId }: WeeklyMealPlannerProps) {
       //   mealPlanId: currentMealPlanId,
       //   weeklyPlan,
       // });
-      setShowPlanner(false);
+      // setShowPlanner(false);
+      router.push(`/meal-plan`);
 
       toast({
         title: "Success",
@@ -215,53 +215,6 @@ export function WeeklyMealPlanner({ existingPlanId }: WeeklyMealPlannerProps) {
       });
     }
   };
-
-  if (!showPlanner) {
-    return (
-      <Card className="mx-auto w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Create New Meal Plan</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleCreateMealPlan} className="space-y-4">
-            <div>
-              <Label htmlFor="mealPlanName">Meal Plan Name</Label>
-              <Input
-                id="mealPlanName"
-                value={mealPlanName}
-                onChange={(e) => setMealPlanName(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="startDate">Start Date</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="endDate">End Date</Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Creating..." : "Create New Meal Plan"}
-            </Button>
-            {error && <p className="text-sm text-red-500">{error.message}</p>}
-          </form>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <div className="space-y-4">

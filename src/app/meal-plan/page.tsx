@@ -21,14 +21,6 @@ const MealPlanPage: React.FC = () => {
     router.push(`/meal-plan/new`);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-primary"></div>
-      </div>
-    );
-  }
-
   if (error) {
     return <div>Error loading meal plans: {error.message}</div>;
   }
@@ -40,7 +32,11 @@ const MealPlanPage: React.FC = () => {
           <h1 className="text-2xl font-bold">Your Meal Plans</h1>
           <Button onClick={handleCreateNew}>Create New Plan</Button>
         </div>
-        {mealPlans && mealPlans.length > 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center pt-4">
+            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-primary"></div>
+          </div>
+        ) : mealPlans && mealPlans.length > 0 ? (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {mealPlans.map((plan: MealPlanSummary) => (
               <Card key={plan.id} className="transition-shadow duration-200 hover:shadow-lg">
