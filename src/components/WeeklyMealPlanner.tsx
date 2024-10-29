@@ -188,7 +188,7 @@ export function WeeklyMealPlanner({ existingPlanId }: WeeklyMealPlannerProps) {
             </div>
           </div>
 
-          <PieChart data={createChartData(nutritionTarget)} />
+          <PieChart data={createChartData(nutritionTarget)} calories={nutritionTarget.calories} />
           {daysOfWeek.map((dayName) => {
             const day = weeklyPlan.find((d) => d.day_of_week === dayName);
             if (!day) return null;

@@ -2,7 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import React from "react";
-import { PieChart, Pie, ResponsiveContainer, Cell, Legend } from "recharts";
+import { PieChart, Pie, ResponsiveContainer, Cell, Legend, Label } from "recharts";
+import { Flame } from "lucide-react";
 
 interface ChartData {
   name: string;
@@ -12,6 +13,7 @@ interface ChartData {
 
 interface ComponentProps {
   data: ChartData[];
+  calories: number;
 }
 
 const RADIAN = Math.PI / 180;
@@ -34,7 +36,35 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, val
   );
 };
 
-export function PieChartComponent({ data }: ComponentProps) {
+const renderCenterLabel = ({ viewBox: { cx, cy }, calories }: any) => {
+  return (
+    <g>
+      <foreignObject x={cx - 12} y={cy - 32} width={24} height={24}>
+        <Flame className="text-primary" size={24} />
+      </foreignObject>
+      <text
+        x={cx}
+        y={cy}
+        textAnchor="middle"
+        dominantBaseline="central"
+        className="fill-foreground text-lg font-bold"
+      >
+        {calories}
+      </text>
+      <text
+        x={cx}
+        y={cy + 20}
+        textAnchor="middle"
+        dominantBaseline="central"
+        className="fill-muted-foreground text-xs"
+      >
+        kcal/day
+      </text>
+    </g>
+  );
+};
+
+export function PieChartComponent({ data, calories }: ComponentProps) {
   return (
     <Card className="max-h-[300px] w-full">
       <CardHeader className="pb-0">
@@ -61,7 +91,37 @@ export function PieChartComponent({ data }: ComponentProps) {
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.fill} />
               ))}
+              <Label
+                content={({ viewBox }) => {
+                  // Cast viewBox to any to access cx/cy properties
+                  const view = viewBox as any;
+                  if (view && typeof view.cx !== "undefined" && typeof view.cy !== "undefined") {
+                    return (
+                      <>
+                        <text x={view.cx} y={view.cy} textAnchor="middle" dominantBaseline="middle">
+                          <tspan
+                            x={view.cx}
+                            y={view.cy - 4}
+                            className="fill-foreground text-2xl font-bold"
+                          >
+                            {calories}
+                          </tspan>
+                          <tspan
+                            x={view.cx}
+                            y={view.cy + 16}
+                            className="fill-muted-foreground text-sm"
+                          >
+                            kcal/day
+                          </tspan>
+                        </text>
+                      </>
+                    );
+                  }
+                  return null;
+                }}
+              />
             </Pie>
+            {/* {renderCenterLabel({ viewBox: { cx: "50%", cy: "50%" }, calories })} */}
             <Legend
               layout="vertical"
               verticalAlign="middle"
