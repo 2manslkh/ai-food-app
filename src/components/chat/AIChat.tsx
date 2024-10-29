@@ -239,7 +239,7 @@ export function AIChat() {
               },
             },
           ]);
-        }, 5000); // 5 second delay
+        }, 2000); // 2 second delay
       }
     } catch (error) {
       console.error("Error:", error);
