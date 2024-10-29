@@ -8,15 +8,20 @@ import { DishSwiper } from "../DishSwiper";
 import { Meal } from "@/types";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Check } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface Message {
   role: string;
   content: string;
   id?: string;
-  type?: "text" | "swiper";
+  type?: "text" | "swiper" | "prompt";
   dishes?: Meal[];
   isComplete?: boolean;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 interface UserPreferences {
@@ -26,7 +31,15 @@ interface UserPreferences {
   foodPreferences: string;
 }
 
+interface PreferenceProgress {
+  cuisine: boolean;
+  nutritionalGoals: boolean;
+  dietaryRestrictions: boolean;
+  foodPreferences: boolean;
+}
+
 export function AIChat() {
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -44,6 +57,13 @@ export function AIChat() {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [preferenceProgress, setPreferenceProgress] = useState<PreferenceProgress>({
+    cuisine: false,
+    nutritionalGoals: false,
+    dietaryRestrictions: false,
+    foodPreferences: false,
+  });
+  const [usedPrompts, setUsedPrompts] = useState<Set<string>>(new Set());
 
   // Focus input on mount
   useEffect(() => {
@@ -68,6 +88,11 @@ export function AIChat() {
   }, [messages, showDishSwiper]);
 
   const generateMealPlan = async () => {
+    // lead to meal plan page
+    router.push("/meal-plan/new");
+  };
+
+  const generateMeals = async () => {
     setIsLoading(true);
     try {
       const response = await fetch("/api/generateMealPlan", {
@@ -165,6 +190,7 @@ export function AIChat() {
         body: JSON.stringify({
           message: userMessage,
           existingPreferences: preferences,
+          contextMessages: messages,
         }),
       });
 
@@ -193,15 +219,31 @@ export function AIChat() {
         },
       ]);
 
-      // If we have enough information, show generate button
-      if (
-        data.cuisine !== "unknown" ||
-        data.nutritionalGoals !== "unknown" ||
-        data.dietaryRestrictions !== "unknown" ||
-        data.foodPreferences !== "unknown"
-      ) {
-        setShowGenerateButton(true);
-      }
+      // Check if we should show the generate prompt
+      setMessages((prev) => {
+        const lastMessage = prev[prev.length - 1];
+        if (
+          lastMessage?.role === "assistant" &&
+          hasEnoughPreferences(preferences) &&
+          !prev.some((msg) => msg.type === "swiper")
+        ) {
+          return [
+            ...prev,
+            {
+              role: "assistant",
+              content:
+                "I have enough information to suggest some meals for you. Would you like to see them? Otherwise, you can tell me more of your preferences.",
+              id: Date.now().toString(),
+              type: "prompt",
+              action: {
+                label: "Generate Meal Suggestions",
+                onClick: generateMeals,
+              },
+            },
+          ];
+        }
+        return prev;
+      });
     } catch (error) {
       console.error("Error:", error);
       toast({
@@ -215,31 +257,81 @@ export function AIChat() {
   };
 
   const handleDishSwiperComplete = () => {
-    // Find the index of the completed swiper message
-    const swiperMessageIndex = messages.findIndex(
-      (msg) => msg.type === "swiper" && msg.dishes?.length === 0
-    );
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant",
+        content:
+          "Looking good! I've added your favorite dishes! Would you like me to create a weekly schedule with these meals?",
+        id: Date.now().toString(),
+        type: "prompt",
+        action: {
+          label: "Build Meal Plan",
+          onClick: generateMealPlan,
+        },
+      },
+    ]);
+  };
 
-    if (swiperMessageIndex !== -1) {
-      setMessages((prev) => [
-        ...prev.slice(0, swiperMessageIndex),
-        {
-          role: "assistant",
-          content: "done",
-          id: Date.now().toString(),
-          type: "text",
-          isComplete: true,
-        },
-        {
-          role: "assistant",
-          content:
-            "Great! I've added your favorite dishes to your meal plan. Would you like me to create a weekly schedule with these meals?",
-          id: (Date.now() + 1).toString(),
-          type: "text",
-        },
-        ...prev.slice(swiperMessageIndex + 1),
-      ]);
+  // Update when preferences change
+  useEffect(() => {
+    if (preferences) {
+      setPreferenceProgress({
+        cuisine: preferences.cuisine !== "unknown",
+        nutritionalGoals: preferences.nutritionalGoals !== "unknown",
+        dietaryRestrictions: preferences.dietaryRestrictions !== "unknown",
+        foodPreferences: preferences.foodPreferences !== "unknown",
+      });
     }
+  }, [preferences]);
+
+  // Add a progress indicator in the chat
+  const renderProgress = () => (
+    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+      <span>Information gathered:</span>
+      <div className="flex space-x-1">
+        {Object.entries(preferenceProgress).map(([key, complete]) => (
+          <div
+            key={key}
+            className={cn(
+              "h-1.5 w-1.5 rounded-full",
+              complete ? "bg-primary" : "bg-muted-foreground/30"
+            )}
+          />
+        ))}
+      </div>
+    </div>
+  );
+
+  const getSuggestedPrompts = () => {
+    if (!preferences) return [];
+
+    const prompts = [];
+    if (preferences.cuisine === "unknown") {
+      prompts.push("What types of cuisine do you enjoy?");
+    }
+    if (preferences.nutritionalGoals === "unknown") {
+      prompts.push("Do you have any specific nutritional goals?");
+    }
+    // ... add other prompts
+
+    return prompts;
+  };
+
+  // Add function to check if we have enough preferences
+  const hasEnoughPreferences = (prefs: UserPreferences | null): boolean => {
+    if (!prefs) return false;
+    return (
+      prefs.cuisine !== "unknown" &&
+      prefs.nutritionalGoals !== "unknown" &&
+      prefs.dietaryRestrictions !== "unknown" &&
+      prefs.foodPreferences !== "unknown"
+    );
+  };
+
+  const handlePromptClick = (prompt: string) => {
+    setInput(prompt);
+    setUsedPrompts((prev) => new Set([...prev, prompt]));
   };
 
   return (
@@ -265,6 +357,23 @@ export function AIChat() {
                   <span>Done</span>
                   <Check className="h-4 w-4 text-green-500" />
                 </div>
+              ) : message.type === "prompt" ? (
+                <div className="flex flex-col items-start space-y-2">
+                  <div className="rounded-lg bg-muted px-4 py-2 text-foreground">
+                    {message.content}
+                  </div>
+                  {message.action && (
+                    <Button
+                      onClick={message.action.onClick}
+                      disabled={isLoading}
+                      className="flex items-center gap-2"
+                      size="sm"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      {isLoading ? "Generating..." : message.action.label}
+                    </Button>
+                  )}
+                </div>
               ) : (
                 <div
                   className={cn(
@@ -279,13 +388,6 @@ export function AIChat() {
               )}
             </div>
           ))}
-          {showGenerateButton && (
-            <div className="flex justify-center">
-              <Button onClick={generateMealPlan} disabled={isLoading}>
-                Generate Meal Plan
-              </Button>
-            </div>
-          )}
           {isLoading && (
             <div className="flex items-center justify-center">
               <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-primary"></div>
@@ -295,6 +397,24 @@ export function AIChat() {
         </div>
       </ScrollArea>
       <div className="sticky bottom-0 border-t bg-background p-4">
+        {getSuggestedPrompts().length > 0 && (
+          <div className="mb-2 flex flex-wrap justify-end gap-2">
+            {getSuggestedPrompts()
+              .filter((prompt) => !usedPrompts.has(prompt))
+              .map((prompt) => (
+                <Button
+                  key={prompt}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePromptClick(prompt)}
+                  className="flex items-center gap-2 text-xs"
+                >
+                  <Sparkles className="h-3 w-3" />
+                  {prompt}
+                </Button>
+              ))}
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="flex space-x-2">
           <Input
             ref={inputRef}

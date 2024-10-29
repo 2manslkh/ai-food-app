@@ -16,14 +16,13 @@ interface DishSwiperProps {
 
 export function DishSwiper({ dishes, onComplete }: DishSwiperProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [remainingDishes, setRemainingDishes] = useState([...dishes]);
   const [isComplete, setIsComplete] = useState(false);
   const handleMealInteraction = useHandleMealInteraction();
 
   const handleLike = async () => {
     try {
       await handleMealInteraction.mutateAsync({
-        meal: remainingDishes[currentIndex],
+        meal: dishes[currentIndex],
         isFavorite: true,
       });
       nextDish();
@@ -40,7 +39,7 @@ export function DishSwiper({ dishes, onComplete }: DishSwiperProps) {
   const handleDislike = async () => {
     try {
       await handleMealInteraction.mutateAsync({
-        meal: remainingDishes[currentIndex],
+        meal: dishes[currentIndex],
         isFavorite: false,
       });
       nextDish();
@@ -55,11 +54,10 @@ export function DishSwiper({ dishes, onComplete }: DishSwiperProps) {
   };
 
   const nextDish = () => {
-    if (currentIndex < remainingDishes.length - 1) {
+    if (currentIndex < dishes.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
       setIsComplete(true);
-      setRemainingDishes([]);
       setTimeout(() => {
         onComplete();
       }, 1000); // Wait for animation to complete
@@ -75,11 +73,11 @@ export function DishSwiper({ dishes, onComplete }: DishSwiperProps) {
     );
   }
 
-  if (remainingDishes.length === 0) {
+  if (currentIndex >= dishes.length) {
     return null;
   }
 
-  const currentDish = remainingDishes[currentIndex];
+  const currentDish = dishes[currentIndex];
 
   return (
     <div className={cn("flex flex-col items-center", "animate-pop-in-ai")}>

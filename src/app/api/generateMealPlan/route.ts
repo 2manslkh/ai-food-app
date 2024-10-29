@@ -170,7 +170,6 @@ export async function POST(req: Request) {
         },
       },
     });
-    console.log("🚀 | POST | response:", response);
 
     if (!response.choices[0].message.content) {
       return NextResponse.json({ error: "No response from AI" }, { status: 500 });

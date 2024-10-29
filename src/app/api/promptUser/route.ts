@@ -10,12 +10,32 @@ const mock = process.env.MOCK_OPEN_AI === "true" || false;
 const mockResponse = mockUserPrompt;
 
 export async function POST(req: Request) {
+  const questions = [
+    `Could you let me know your favorite cuisine?`,
+    `What kind of cuisine do you enjoy?`,
+    `Is there a specific cuisine you prefer?`,
+    `What types of food do you like to eat?`,
+    `Do you have any favorite cultural or regional dishes?`,
+    `What cuisine makes you most excited to eat?`,
+    `If you could eat one type of food for the rest of your life, what would it be?`,
+    `Which restaurants do you find yourself going back to most often?`,
+  ];
+  const followUps = [
+    "Do you have a favorite type of spicy food?",
+    "Is there a particular spice level you prefer?",
+    "Are there any specific ingredients you especially enjoy?",
+    "Do you prefer your food mild, medium, or hot?",
+    "What's your ideal balance between flavors - spicy, sweet, sour, etc?",
+    "Are there any cooking methods you particularly enjoy, like grilled or stir-fried?",
+    "Do you have any favorite herbs or seasonings?",
+    "How do you feel about fusion cuisine that combines different styles?",
+  ];
   if (mock) {
     console.log("Mocking user prompt");
     return NextResponse.json(mockResponse);
   }
 
-  const { message, existingPreferences } = await req.json();
+  const { message, existingPreferences, contextMessages } = await req.json();
 
   // Initialize structured data
   const defaults = {
@@ -33,35 +53,38 @@ export async function POST(req: Request) {
           role: "system",
           content: [
             {
-              text: 'You are a helpful assistant that engages with users to extract their meal preferences by asking targeted questions.\n\nConsider the existing preferences provided and update them if necessary:\n- Cuisine: {cuisine} (or "unknown" if not provided)\n- Nutritional Goals: {nutritionalGoals} (or "unknown" if not provided)\n- Dietary Restrictions: {dietaryRestrictions} (or "unknown" if not provided)\n- Food Preferences: {foodPreferences} (or "unknown" if not provided)\n\nAsk targeted questions to fill in these categories.\n\n# Steps\n\n1. **Extract Preferences**: Ask the user the following questions to fill in any missing information:\n   - What type of cuisine do you prefer?\n   - What are your nutritional goals (e.g., weight loss, muscle gain, etc.)?\n   - Do you have any dietary restrictions (e.g., vegan, gluten-free)?\n   - What specific food preferences do you have (e.g., spicy food, favorite ingredients)?\n   \n2. **Update the Preferences**: Integrate the user\'s responses into the existing preferences.\n\n3. **Generate Output**: Provide the user\'s preferences in a structured format.\n\n# Output Format\n\nProvide the final preferences in JSON format with the following keys:\n- `"cuisine"`\n- `"nutritionalGoals"`\n- `"dietaryRestrictions"`\n- `"foodPreferences"`\n\n# Notes\n\n- Ensure each category has a value by updating "unknown" fields with the user\'s responses.\n- Maintain a friendly and engaging tone to encourage user participation.\n- Handle cases where the user might not have clear preferences; keep "unknown" in such cases.',
+              text: `You are a friendly assistant that engages with users in a conversational style to learn about their meal preferences.\n\n
+                # Steps\n1. **Extract Preferences**: Start with questions, like "${questions[Math.floor(Math.random() * questions.length)]}".\n
+                2. **Clarify if Needed**: If user responses are broad, ask follow-up questions like "${followUps[Math.floor(Math.random() * followUps.length)]}".\n
+                3. **Guide if Stalled/Complete**: If the user doesn’t respond or repeatedly says "none" with no clear preference updates, gently prompt them to "generate meal" to proceed. Same if all preferences are filled with no new updates.\n
+                4. **Output**: Final preferences in JSON format.\n\n
+                # Notes\nEncourage a warm, personable tone.`,
               type: "text",
             },
           ],
         },
+        ...contextMessages,
         {
           role: "user",
           content: [
             {
               type: "text",
               text: `
-              Consider the existing preferences: 
-              Cuisine: ${defaults.cuisine ? defaults.cuisine : "unknown"},
-              Nutritional Goals: ${defaults.nutritionalGoals ? defaults.nutritionalGoals : "unknown"},
-              Dietary Restrictions: ${defaults.dietaryRestrictions ? defaults.dietaryRestrictions : "unknown"},
-              Food Preferences: ${defaults.foodPreferences ? defaults.foodPreferences : "unknown"}.
-              
-              Ask targeted questions to fill in these categories and provide a structured JSON output with the keys: 
-              cuisine, nutritionalGoals, dietaryRestrictions, foodPreferences.
-              
-              User Message: ${message}`,
+                Existing preferences: 
+                Cuisine: ${defaults.cuisine ? defaults.cuisine : "unknown"},
+                Nutritional Goals: ${defaults.nutritionalGoals ? defaults.nutritionalGoals : "unknown"},
+                Dietary Restrictions: ${defaults.dietaryRestrictions ? defaults.dietaryRestrictions : "unknown"},
+                Food Preferences: ${defaults.foodPreferences ? defaults.foodPreferences : "unknown"}.\n\n
+                User Message: ${message}`,
             },
           ],
         },
       ],
-      temperature: 1,
+      temperature: 1.2,
+      top_p: 0.9,
       max_tokens: 2048,
-      frequency_penalty: 0,
-      presence_penalty: 0,
+      frequency_penalty: 0.5,
+      presence_penalty: 0.3,
       response_format: {
         type: "json_schema",
         json_schema: {
@@ -78,34 +101,10 @@ export async function POST(req: Request) {
             ],
             properties: {
               cuisine: {
-                enum: [
-                  "unknown",
-                  "Italian",
-                  "Mexican",
-                  "Chinese",
-                  "Indian",
-                  "Mediterranean",
-                  "American",
-                  "Japanese",
-                  "Thai",
-                  "French",
-                  "Spanish",
-                  "Middle Eastern",
-                  "other",
-                ],
                 type: "string",
                 description: "The type of cuisine the user prefers.",
               },
               foodPreferences: {
-                enum: [
-                  "unknown",
-                  "spicy",
-                  "sweet",
-                  "sour",
-                  "salty",
-                  "favorite ingredients",
-                  "other",
-                ],
                 type: "string",
                 description: "Specific food preferences that the user has.",
               },
@@ -132,6 +131,7 @@ export async function POST(req: Request) {
                   "nut-free",
                   "halal",
                   "kosher",
+                  "none",
                   "other",
                 ],
                 type: "string",
