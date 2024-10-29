@@ -135,7 +135,7 @@ export async function POST(req: Request) {
                   "other",
                 ],
                 type: "string",
-                description: "Any dietary restrictions the user has.",
+                description: "Any dietary restrictions the user has. Can be none.",
               },
               userPrompt: {
                 type: "string",

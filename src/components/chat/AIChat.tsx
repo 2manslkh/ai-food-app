@@ -10,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Check, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { QuickResponse } from "./QuickResponse";
 
 interface Message {
   role: string;
@@ -63,7 +64,6 @@ export function AIChat() {
     dietaryRestrictions: false,
     foodPreferences: false,
   });
-  const [usedPrompts, setUsedPrompts] = useState<Set<string>>(new Set());
 
   // Focus input on mount
   useEffect(() => {
@@ -171,11 +171,7 @@ export function AIChat() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-
-    const userMessage = input;
+  const sendChatMessage = async (userMessage: string) => {
     const messageId = Date.now().toString();
     setMessages((prev) => [...prev, { role: "user", content: userMessage, id: messageId }]);
     setInput("");
@@ -222,6 +218,7 @@ export function AIChat() {
       // Check if we should show the generate prompt
       setMessages((prev) => {
         const lastMessage = prev[prev.length - 1];
+        console.log("has enough preferences", hasEnoughPreferences(preferences));
         if (
           lastMessage?.role === "assistant" &&
           hasEnoughPreferences(preferences) &&
@@ -254,6 +251,14 @@ export function AIChat() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+
+    const userMessage = input;
+    sendChatMessage(userMessage);
   };
 
   const handleDishSwiperComplete = () => {
@@ -303,21 +308,6 @@ export function AIChat() {
     </div>
   );
 
-  const getSuggestedPrompts = () => {
-    if (!preferences) return [];
-
-    const prompts = [];
-    if (preferences.cuisine === "unknown") {
-      prompts.push("What types of cuisine do you enjoy?");
-    }
-    if (preferences.nutritionalGoals === "unknown") {
-      prompts.push("Do you have any specific nutritional goals?");
-    }
-    // ... add other prompts
-
-    return prompts;
-  };
-
   // Add function to check if we have enough preferences
   const hasEnoughPreferences = (prefs: UserPreferences | null): boolean => {
     if (!prefs) return false;
@@ -331,7 +321,7 @@ export function AIChat() {
 
   const handlePromptClick = (prompt: string) => {
     setInput(prompt);
-    setUsedPrompts((prev) => new Set([...prev, prompt]));
+    sendChatMessage(prompt);
   };
 
   return (
@@ -397,24 +387,7 @@ export function AIChat() {
         </div>
       </ScrollArea>
       <div className="sticky bottom-0 border-t bg-background p-4">
-        {getSuggestedPrompts().length > 0 && (
-          <div className="mb-2 flex flex-wrap justify-end gap-2">
-            {getSuggestedPrompts()
-              .filter((prompt) => !usedPrompts.has(prompt))
-              .map((prompt) => (
-                <Button
-                  key={prompt}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePromptClick(prompt)}
-                  className="flex items-center gap-2 text-xs"
-                >
-                  <Sparkles className="h-3 w-3" />
-                  {prompt}
-                </Button>
-              ))}
-          </div>
-        )}
+        <QuickResponse onPromptClick={handlePromptClick} />
         <form onSubmit={handleSubmit} className="flex space-x-2">
           <Input
             ref={inputRef}
