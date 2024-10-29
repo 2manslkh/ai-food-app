@@ -38,7 +38,7 @@ export async function POST(req: Request) {
         {
           role: "system",
           content: `
-            Generate 10 meals in JSON format based on user-provided food preferences, dietary restrictions, nutritional goals, and cuisine type.
+            Generate 5 meals in JSON format based on user-provided food preferences, dietary restrictions, nutritional goals, and cuisine type.
             
             Users will input the following:
             - Cuisine: ${defaults.cuisine}
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
             - Dietary Restrictions: ${defaults.dietaryRestrictions}
             - Food Preferences: ${defaults.foodPreferences}
 
-            Create a JSON array of 10 meal objects with the specified structure.
+            Create a JSON array of 5 meal objects with the specified structure.
           `,
         },
         {
