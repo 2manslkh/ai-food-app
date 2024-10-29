@@ -7,10 +7,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { DishSwiper } from "../DishSwiper";
 import { Meal } from "@/types";
 import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface Message {
   role: string;
   content: string;
+  id?: string;
 }
 
 interface UserPreferences {
@@ -26,6 +28,7 @@ export function AIChat() {
       role: "assistant",
       content:
         "Hello! I'm here to help you create a personalized meal plan. Tell me about your dietary preferences, health goals, and any other relevant information.",
+      id: "initial",
     },
   ]);
   const [input, setInput] = useState("");
@@ -35,11 +38,29 @@ export function AIChat() {
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [showGenerateButton, setShowGenerateButton] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Focus input on mount
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  // Focus input after sending message
+  useEffect(() => {
+    if (!isLoading) {
+      inputRef.current?.focus();
+    }
+  }, [isLoading]);
+
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
-    }
+    scrollToBottom();
   }, [messages, showDishSwiper]);
 
   const generateMealPlan = async () => {
@@ -74,6 +95,7 @@ export function AIChat() {
           role: "assistant",
           content:
             "I've generated some meal suggestions based on your preferences. Let's go through them!",
+          id: Date.now().toString(),
         },
       ]);
 
@@ -106,6 +128,7 @@ export function AIChat() {
           role: "assistant",
           content:
             "I apologize, but I encountered an error while generating your meal plan. Would you like to try again?",
+          id: Date.now().toString(),
         },
       ]);
     } finally {
@@ -119,7 +142,8 @@ export function AIChat() {
     if (!input.trim()) return;
 
     const userMessage = input;
-    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
+    const messageId = Date.now().toString();
+    setMessages((prev) => [...prev, { role: "user", content: userMessage, id: messageId }]);
     setInput("");
     setIsLoading(true);
 
@@ -150,12 +174,13 @@ export function AIChat() {
         foodPreferences: data.foodPreferences,
       });
 
-      // Add AI response to messages
+      // Add AI response to messages with a unique ID
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
           content: data.userPrompt,
+          id: Date.now().toString(),
         },
       ]);
 
@@ -187,6 +212,7 @@ export function AIChat() {
       {
         role: "assistant",
         content: `Great! I've added your favorite dishes to your meal plan. Would you like me to create a weekly schedule with these meals?`,
+        id: Date.now().toString(),
       },
     ]);
   };
@@ -195,15 +221,23 @@ export function AIChat() {
     <div className="flex h-full flex-col">
       <ScrollArea className="flex-grow" ref={scrollAreaRef}>
         <div className="space-y-4 p-4">
-          {messages.map((message, index) => (
+          {messages.map((message) => (
             <div
-              key={index}
-              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+              key={message.id}
+              className={cn(
+                "flex",
+                message.role === "user"
+                  ? "animate-pop-in-user justify-end"
+                  : "animate-pop-in-ai justify-start"
+              )}
             >
               <div
-                className={`max-w-[80%] rounded-lg p-2 ${
-                  message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
-                }`}
+                className={cn(
+                  "max-w-[80%] rounded-lg px-4 py-2 transition-all duration-200",
+                  message.role === "user"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-foreground"
+                )}
               >
                 {message.content}
               </div>
@@ -226,11 +260,13 @@ export function AIChat() {
               <DishSwiper dishes={generatedMeals} onComplete={handleDishSwiperComplete} />
             </div>
           )}
+          <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
       <div className="sticky bottom-0 border-t bg-background p-4">
         <form onSubmit={handleSubmit} className="flex space-x-2">
           <Input
+            ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}

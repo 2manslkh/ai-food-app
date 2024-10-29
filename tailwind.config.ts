@@ -88,9 +88,31 @@ const config: Config = {
           "0%": { transform: "translateY(0) scale(1)", opacity: "1" },
           "100%": { transform: "translateY(-100px) scale(0.5)", opacity: "0" },
         },
+        "pop-in-user": {
+          "0%": {
+            opacity: "0",
+            transform: "scale(0.9) translateX(20px) translateY(20px)",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "scale(1) translateX(0) translateY(0)",
+          },
+        },
+        "pop-in-ai": {
+          "0%": {
+            opacity: "0",
+            transform: "scale(0.9) translateX(-20px) translateY(20px)",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "scale(1) translateX(0) translateY(0)",
+          },
+        },
       },
       animation: {
         "float-up": "float-up 1s ease-out forwards",
+        "pop-in-user": "pop-in-user 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards",
+        "pop-in-ai": "pop-in-ai 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards",
       },
     },
   },

@@ -67,9 +67,6 @@ export function DishSwiper({ dishes, onComplete }: DishSwiperProps) {
 
   return (
     <div className="flex flex-col items-center">
-      <p className="mb-4">
-        Swipe or click to like/dislike ({currentIndex + 1}/{dishes.length})
-      </p>
       <div className="relative mb-4 w-full">
         <MealCard meal={currentDish} />
         <div className="absolute bottom-4 right-4 flex space-x-4">
