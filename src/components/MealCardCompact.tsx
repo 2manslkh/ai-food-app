@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Meal } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { slugify } from "@/lib/utils";
 
 interface MealCardCompactProps {
   meal: Meal;
@@ -20,6 +21,13 @@ export function MealCardCompact({ meal, isSelected = false }: MealCardCompactPro
         <div className="relative h-16 w-16 flex-shrink-0">
           {meal.image ? (
             <Image src={meal.image} alt={meal.name} layout="fill" objectFit="cover" />
+          ) : meal.name ? (
+            <Image
+              src={`/images/${slugify(meal.name)}.webp`}
+              alt={meal.name}
+              layout="fill"
+              objectFit="cover"
+            />
           ) : (
             <Skeleton className="h-full w-full" />
           )}

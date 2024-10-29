@@ -8,11 +8,15 @@ import { DishSwiper } from "../DishSwiper";
 import { Meal } from "@/types";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { Check } from "lucide-react";
 
 interface Message {
   role: string;
   content: string;
   id?: string;
+  type?: "text" | "swiper";
+  dishes?: Meal[];
+  isComplete?: boolean;
 }
 
 interface UserPreferences {
@@ -82,9 +86,6 @@ export function AIChat() {
         throw new Error(data.error || "Failed to generate meal plan");
       }
 
-      console.log("Generated Meal Plan:", data);
-
-      // Validate the response data
       if (!data.meals || !Array.isArray(data.meals) || data.meals.length === 0) {
         throw new Error("Invalid meal plan received");
       }
@@ -96,11 +97,19 @@ export function AIChat() {
           content:
             "I've generated some meal suggestions based on your preferences. Let's go through them!",
           id: Date.now().toString(),
+          type: "text",
+        },
+        {
+          role: "assistant",
+          content: "Rate these meals:",
+          id: (Date.now() + 1).toString(),
+          type: "swiper",
+          dishes: data.meals,
         },
       ]);
 
       setGeneratedMeals(data.meals);
-      setShowDishSwiper(true);
+      setShowDishSwiper(false);
     } catch (error) {
       console.error("Error generating meal plan:", error);
 
@@ -206,15 +215,31 @@ export function AIChat() {
   };
 
   const handleDishSwiperComplete = () => {
-    setShowDishSwiper(false);
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "assistant",
-        content: `Great! I've added your favorite dishes to your meal plan. Would you like me to create a weekly schedule with these meals?`,
-        id: Date.now().toString(),
-      },
-    ]);
+    // Find the index of the completed swiper message
+    const swiperMessageIndex = messages.findIndex(
+      (msg) => msg.type === "swiper" && msg.dishes?.length === 0
+    );
+
+    if (swiperMessageIndex !== -1) {
+      setMessages((prev) => [
+        ...prev.slice(0, swiperMessageIndex),
+        {
+          role: "assistant",
+          content: "done",
+          id: Date.now().toString(),
+          type: "text",
+          isComplete: true,
+        },
+        {
+          role: "assistant",
+          content:
+            "Great! I've added your favorite dishes to your meal plan. Would you like me to create a weekly schedule with these meals?",
+          id: (Date.now() + 1).toString(),
+          type: "text",
+        },
+        ...prev.slice(swiperMessageIndex + 1),
+      ]);
+    }
   };
 
   return (
@@ -231,19 +256,30 @@ export function AIChat() {
                   : "animate-pop-in-ai justify-start"
               )}
             >
-              <div
-                className={cn(
-                  "max-w-[80%] rounded-lg px-4 py-2 transition-all duration-200",
-                  message.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-foreground"
-                )}
-              >
-                {message.content}
-              </div>
+              {message.type === "swiper" ? (
+                <div className="w-full">
+                  <DishSwiper dishes={message.dishes || []} onComplete={handleDishSwiperComplete} />
+                </div>
+              ) : message.isComplete ? (
+                <div className="flex items-center space-x-2 rounded-lg bg-muted px-4 py-2">
+                  <span>Done</span>
+                  <Check className="h-4 w-4 text-green-500" />
+                </div>
+              ) : (
+                <div
+                  className={cn(
+                    "max-w-[80%] rounded-lg px-4 py-2 transition-all duration-200",
+                    message.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-foreground"
+                  )}
+                >
+                  {message.content}
+                </div>
+              )}
             </div>
           ))}
-          {showGenerateButton && !showDishSwiper && (
+          {showGenerateButton && (
             <div className="flex justify-center">
               <Button onClick={generateMealPlan} disabled={isLoading}>
                 Generate Meal Plan
@@ -253,11 +289,6 @@ export function AIChat() {
           {isLoading && (
             <div className="flex items-center justify-center">
               <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-primary"></div>
-            </div>
-          )}
-          {showDishSwiper && (
-            <div className="mt-4">
-              <DishSwiper dishes={generatedMeals} onComplete={handleDishSwiperComplete} />
             </div>
           )}
           <div ref={messagesEndRef} />

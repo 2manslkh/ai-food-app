@@ -6,7 +6,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY, // Ensure you have your OpenAI API key set in your environment variables
 });
 
-const mock = true;
+const mock = process.env.MOCK_OPEN_AI === "true" || false;
 const mockResponse = mockUserPrompt;
 
 export async function POST(req: Request) {

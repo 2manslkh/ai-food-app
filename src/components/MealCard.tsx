@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Meal } from "@/types";
+import { slugify } from "@/lib/utils";
 
 interface MealCardProps {
   meal: Meal;
@@ -18,9 +19,21 @@ export function MealCard({ meal }: MealCardProps) {
         <CardTitle className="text-lg">{meal.name}</CardTitle>
       </CardHeader>
       <CardContent className="flex-grow">
-        <div className="relative mb-4 h-40 w-full">
+        <div className="relative mb-4 h-64 w-full">
           {imageError || !meal.image ? (
-            <Skeleton className="h-40 w-full rounded-md" />
+            !imageError && meal.name ? (
+              <Image
+                src={`/images/${slugify(meal.name)}.webp`}
+                alt={meal.name}
+                layout="fill"
+                objectFit="cover"
+                className="rounded-md"
+                onError={() => setImageError(true)}
+                onLoad={() => setImageLoading(false)}
+              />
+            ) : (
+              <Skeleton className="h-64 w-full rounded-md" />
+            )
           ) : (
             <>
               {imageLoading && <Skeleton className="absolute h-40 w-full rounded-md" />}

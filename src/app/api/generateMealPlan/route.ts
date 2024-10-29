@@ -4,7 +4,7 @@ import OpenAI from "openai";
 import { mockGenerateMealPlanResponse } from "@/lib/mocks";
 
 const mockResponse = mockGenerateMealPlanResponse;
-const mock = true;
+const mock = process.env.MOCK_OPEN_AI === "true" || false;
 // Function to generate meals
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY, // Ensure you have your OpenAI API key set in your environment variables
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
         {
           role: "system",
           content: `
-            Generate meals in JSON format based on user-provided food preferences, dietary restrictions, nutritional goals, and cuisine type.
+            Generate 10 meals in JSON format based on user-provided food preferences, dietary restrictions, nutritional goals, and cuisine type.
             
             Users will input the following:
             - Cuisine: ${defaults.cuisine}
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
             - Dietary Restrictions: ${defaults.dietaryRestrictions}
             - Food Preferences: ${defaults.foodPreferences}
 
-            Create a JSON array of meal objects with the specified structure.
+            Create a JSON array of 10 meal objects with the specified structure.
           `,
         },
         {
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
         },
       ],
       temperature: 1,
-      max_tokens: 2048,
+      max_tokens: 4096,
       frequency_penalty: 0,
       presence_penalty: 0,
       response_format: {
