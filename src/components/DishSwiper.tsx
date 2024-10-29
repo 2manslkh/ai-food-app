@@ -66,7 +66,7 @@ export function DishSwiper({ dishes, onComplete }: DishSwiperProps) {
 
   if (isComplete) {
     return (
-      <div className="animate-pop-in-ai flex items-center justify-center space-x-2 rounded-lg bg-muted px-4 py-2">
+      <div className="flex animate-pop-in-ai items-center justify-center space-x-2 rounded-lg bg-muted px-4 py-2">
         <span>Done</span>
         <Check className="h-4 w-4 text-green-500" />
       </div>
