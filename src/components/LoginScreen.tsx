@@ -9,7 +9,7 @@ export function LoginScreen() {
         <div className="flex flex-grow items-center justify-center">
           <div className="text-center">
             <div className="mb-8">
-              <div className="text-5xl font-bold">Title</div>
+              <div className="text-5xl font-bold">Nutrimate</div>
             </div>
 
             <h1 className="mb-8 h-[200px] text-3xl font-bold">

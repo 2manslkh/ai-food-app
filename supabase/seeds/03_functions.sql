@@ -34,15 +34,26 @@ CREATE OR REPLACE FUNCTION create_meal_plan(
     p_user_id UUID,
     p_name TEXT,
     p_start_date DATE,
-    p_end_date DATE
+    p_end_date DATE,
+    p_calories INTEGER,
+    p_protein NUMERIC,
+    p_carbs NUMERIC,
+    p_fats NUMERIC
 ) RETURNS UUID AS $$
 DECLARE
     v_meal_plan_id UUID;
+    v_nutrition_target_id UUID;
     v_current_date DATE;
     v_day_of_week TEXT;
 BEGIN
-    INSERT INTO meal_plans (user_id, name, start_date, end_date)
-    VALUES (p_user_id, p_name, p_start_date, p_end_date)
+    -- Create nutrition target
+    INSERT INTO nutrition_targets (calories, protein, carbs, fats)
+    VALUES (p_calories, p_protein, p_carbs, p_fats)
+    RETURNING id INTO v_nutrition_target_id;
+
+    -- Create meal plan with nutrition target reference
+    INSERT INTO meal_plans (user_id, name, start_date, end_date, nutrition_target_id)
+    VALUES (p_user_id, p_name, p_start_date, p_end_date, v_nutrition_target_id)
     RETURNING id INTO v_meal_plan_id;
 
     -- Create meal_days for each day in the meal plan
@@ -697,6 +708,7 @@ RETURNS TABLE (
     total_days INTEGER,
     total_meals INTEGER,
     total_calories INTEGER,
+    nutrition_target JSONB,
     created_at TIMESTAMP WITH TIME ZONE
 ) AS $$
 BEGIN
@@ -710,18 +722,26 @@ BEGIN
         COUNT(DISTINCT md.id)::INTEGER as total_days,
         COUNT(mdm.id)::INTEGER as total_meals,
         COALESCE(SUM(md.total_calories), 0)::INTEGER as total_calories,
+        jsonb_build_object(
+            'calories', nt.calories,
+            'protein', nt.protein,
+            'carbs', nt.carbs,
+            'fats', nt.fats
+        ) as nutrition_target,
         mp.created_at
     FROM meal_plans mp
     LEFT JOIN meal_days md ON mp.id = md.meal_plan_id
     LEFT JOIN meal_day_meals mdm ON md.id = mdm.meal_day_id
+    LEFT JOIN nutrition_targets nt ON mp.nutrition_target_id = nt.id
     WHERE mp.user_id = auth.uid()
-    GROUP BY mp.id, mp.user_id, mp.name, mp.start_date, mp.end_date, mp.created_at
+    GROUP BY mp.id, mp.user_id, mp.name, mp.start_date, mp.end_date, mp.created_at, 
+             nt.calories, nt.protein, nt.carbs, nt.fats
     ORDER BY mp.created_at DESC;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Grant execute permissions
-GRANT EXECUTE ON FUNCTION create_meal_plan(UUID, TEXT, DATE, DATE) TO authenticated;
+GRANT EXECUTE ON FUNCTION create_meal_plan(UUID, TEXT, DATE, DATE, INTEGER, NUMERIC, NUMERIC, NUMERIC) TO authenticated;
 GRANT EXECUTE ON FUNCTION edit_meal_plan(UUID, TEXT, DATE, DATE) TO authenticated;
 GRANT EXECUTE ON FUNCTION delete_meal_plan(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION add_meal_to_meal_day(UUID, UUID, TEXT, NUMERIC) TO authenticated;

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, use, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PieChartComponent as PieChart } from "@/components/ui/pie-chart";
@@ -9,13 +9,11 @@ import { Progress } from "@/components/ui/progress";
 import { AddMealDialog } from "./AddMealDialog";
 import { MealCardCompact } from "./MealCardCompact";
 import {
-  useCreateMealPlan,
-  useFetchMealPlans,
   useFetchUserFavoriteMeals,
   useSaveMealPlanDays,
   useFetchMealPlanDays,
+  useFetchMealPlanDetails,
 } from "@/hooks/useApi";
-import { useUserId } from "@/hooks/useUserId";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
@@ -44,15 +42,12 @@ export function WeeklyMealPlanner({ existingPlanId }: WeeklyMealPlannerProps) {
   const oneWeekFromNow = new Date(today);
   oneWeekFromNow.setDate(oneWeekFromNow.getDate() + 6);
 
-  const formatDate = (date: Date) => date.toISOString().split("T")[0];
-
-  const [nutritionTarget] = useState<NutritionTarget>({
+  const [nutritionTarget, setNutritionTarget] = useState<NutritionTarget>({
     calories: 2000,
     protein: 150,
     carbs: 200,
     fats: 65,
   });
-  const [showPlanner, setShowPlanner] = useState(!!existingPlanId);
   const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPlan>(
     daysOfWeek.map((day) => ({
       id: "",
@@ -70,17 +65,9 @@ export function WeeklyMealPlanner({ existingPlanId }: WeeklyMealPlannerProps) {
   const [isAddMealDialogOpen, setIsAddMealDialogOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
-  // New state for meal plan details
-  const [mealPlanName, setMealPlanName] = useState("");
-  const [startDate, setStartDate] = useState(formatDate(today));
-  const [endDate, setEndDate] = useState(formatDate(oneWeekFromNow));
-
   // const favoriteMeals: Meal[] = mockMeals;
   const { data: favoriteMeals } = useFetchUserFavoriteMeals();
 
-  const userId = useUserId();
-  const createMealPlanMutation = useCreateMealPlan();
-  const { isLoading, error } = useFetchMealPlans();
   const saveMealPlanDaysMutation = useSaveMealPlanDays();
   const [currentMealPlanId, setCurrentMealPlanId] = useState<string | null>(existingPlanId || null);
 
@@ -91,48 +78,22 @@ export function WeeklyMealPlanner({ existingPlanId }: WeeklyMealPlannerProps) {
   const { data: mealPlanDays, isLoading: isLoadingMealPlanDays } =
     useFetchMealPlanDays(currentMealPlanId);
 
+  // Add the new query
+  const { data: mealPlanDetails, isLoading: isLoadingMealPlan } =
+    useFetchMealPlanDetails(existingPlanId);
+
+  // Update nutritionTarget when meal plan details are loaded
+  useEffect(() => {
+    if (mealPlanDetails?.nutritionTarget) {
+      setNutritionTarget(mealPlanDetails.nutritionTarget);
+    }
+  }, [mealPlanDetails]);
+
   useEffect(() => {
     if (mealPlanDays) {
       setWeeklyPlan(mealPlanDays);
     }
   }, [mealPlanDays]);
-
-  const handleCreateMealPlan = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!mealPlanName || !startDate || !endDate || !userId) {
-        toast({
-          title: "Error",
-          description: "Please fill in all fields and ensure you're logged in",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      try {
-        const result = await createMealPlanMutation.mutateAsync({
-          name: mealPlanName,
-          startDate,
-          endDate,
-        });
-
-        setCurrentMealPlanId(result);
-        toast({
-          title: "Success",
-          description: "Meal plan created successfully",
-        });
-        setShowPlanner(true);
-      } catch (error) {
-        console.error("Failed to create meal plan:", error);
-        toast({
-          title: "Error",
-          description: "Failed to create meal plan",
-          variant: "destructive",
-        });
-      }
-    },
-    [mealPlanName, startDate, endDate, userId, createMealPlanMutation]
-  );
 
   const calculateDailyNutrition = (meals: Meal[]): DailyNutrition => {
     return meals.reduce(
@@ -194,14 +155,7 @@ export function WeeklyMealPlanner({ existingPlanId }: WeeklyMealPlannerProps) {
     }
 
     try {
-      console.log("🚀 | handleSaveMealPlan | currentMealPlanId:", currentMealPlanId);
-      // await saveMealPlanDaysMutation.mutateAsync({
-      //   mealPlanId: currentMealPlanId,
-      //   weeklyPlan,
-      // });
-      // setShowPlanner(false);
       router.push(`/meal-plan`);
-
       toast({
         title: "Success",
         description: "Meal plan saved successfully",
@@ -218,74 +172,91 @@ export function WeeklyMealPlanner({ existingPlanId }: WeeklyMealPlannerProps) {
 
   return (
     <div className="space-y-4">
-      <PieChart data={createChartData(nutritionTarget)} />
+      {isLoadingMealPlan ? (
+        <div>Loading meal plan details...</div>
+      ) : (
+        <>
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">{mealPlanDetails?.name || "Untitled Meal Plan"}</h1>
+            <div className="text-sm text-muted-foreground">
+              {mealPlanDetails?.start_date && mealPlanDetails?.end_date && (
+                <span>
+                  {new Date(mealPlanDetails.start_date).toLocaleDateString()} -{" "}
+                  {new Date(mealPlanDetails.end_date).toLocaleDateString()}
+                </span>
+              )}
+            </div>
+          </div>
 
-      {daysOfWeek.map((dayName) => {
-        const day = weeklyPlan.find((d) => d.day_of_week === dayName);
-        if (!day) return null;
+          <PieChart data={createChartData(nutritionTarget)} />
+          {daysOfWeek.map((dayName) => {
+            const day = weeklyPlan.find((d) => d.day_of_week === dayName);
+            if (!day) return null;
 
-        const dailyNutrition = calculateDailyNutrition(day.meals);
-        return (
-          <Card key={dayName}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 py-2 pr-2">
-              <CardTitle className="text-lg">{dayName}</CardTitle>
-              <div className="flex items-center space-x-2">
-                {renderNutrientBar(
-                  dailyNutrition.protein,
-                  nutritionTarget.protein,
-                  "bg-[hsl(var(--chart-bg-1))]",
-                  "hsl(var(--chart-1))"
-                )}
-                {renderNutrientBar(
-                  dailyNutrition.carbs,
-                  nutritionTarget.carbs,
-                  "bg-[hsl(var(--chart-bg-2))]",
-                  "hsl(var(--chart-2))"
-                )}
-                {renderNutrientBar(
-                  dailyNutrition.fats,
-                  nutritionTarget.fats,
-                  "bg-[hsl(var(--chart-bg-3))]",
-                  "hsl(var(--chart-3))"
-                )}
-                <span className="text-xs font-medium">{dailyNutrition.calories} kcal</span>
-              </div>
-            </CardHeader>
-            <CardContent className="pr-2">
-              <div className="space-y-1">
-                {day.meals.map((meal, index) => (
-                  <MealCardCompact key={`${meal.id}-${index}`} meal={meal} />
-                ))}
-              </div>
-              <Button
-                className="mt-4"
-                onClick={() => handleAddMealClick(day.meal_day_id, day.day_of_week)}
-                disabled={!day.meal_day_id}
-              >
-                Add Meal
-              </Button>
-            </CardContent>
-          </Card>
-        );
-      })}
+            const dailyNutrition = calculateDailyNutrition(day.meals);
+            return (
+              <Card key={dayName}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 py-2 pr-2">
+                  <CardTitle className="text-lg">{dayName}</CardTitle>
+                  <div className="flex items-center space-x-2">
+                    {renderNutrientBar(
+                      dailyNutrition.protein,
+                      nutritionTarget.protein,
+                      "bg-[hsl(var(--chart-bg-1))]",
+                      "hsl(var(--chart-1))"
+                    )}
+                    {renderNutrientBar(
+                      dailyNutrition.carbs,
+                      nutritionTarget.carbs,
+                      "bg-[hsl(var(--chart-bg-2))]",
+                      "hsl(var(--chart-2))"
+                    )}
+                    {renderNutrientBar(
+                      dailyNutrition.fats,
+                      nutritionTarget.fats,
+                      "bg-[hsl(var(--chart-bg-3))]",
+                      "hsl(var(--chart-3))"
+                    )}
+                    <span className="text-xs font-medium">{dailyNutrition.calories} kcal</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="pr-2">
+                  <div className="space-y-1">
+                    {day.meals.map((meal, index) => (
+                      <MealCardCompact key={`${meal.id}-${index}`} meal={meal} />
+                    ))}
+                  </div>
+                  <Button
+                    className="mt-4"
+                    onClick={() => handleAddMealClick(day.meal_day_id, day.day_of_week)}
+                    disabled={!day.meal_day_id}
+                  >
+                    Add Meal
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
 
-      <AddMealDialog
-        isOpen={isAddMealDialogOpen}
-        onClose={() => setIsAddMealDialogOpen(false)}
-        onAddMeals={handleAddMeals}
-        favoriteMeals={favoriteMeals || []}
-        mealDayId={currentMealDayId || ""}
-        currentMeals={weeklyPlan.find((day) => day.day_of_week === selectedDay)?.meals || []}
-      />
+          <AddMealDialog
+            isOpen={isAddMealDialogOpen}
+            onClose={() => setIsAddMealDialogOpen(false)}
+            onAddMeals={handleAddMeals}
+            favoriteMeals={favoriteMeals || []}
+            mealDayId={currentMealDayId || ""}
+            currentMeals={weeklyPlan.find((day) => day.day_of_week === selectedDay)?.meals || []}
+          />
 
-      <Button
-        className="w-full"
-        onClick={handleSaveMealPlan}
-        disabled={false}
-        // disabled={saveMealPlanDaysMutation.isPending}
-      >
-        {saveMealPlanDaysMutation.isPending ? "Saving..." : "Save Meal Plan"}
-      </Button>
+          <Button
+            className="w-full"
+            onClick={handleSaveMealPlan}
+            disabled={false}
+            // disabled={saveMealPlanDaysMutation.isPending}
+          >
+            {saveMealPlanDaysMutation.isPending ? "Saving..." : "Save Meal Plan"}
+          </Button>
+        </>
+      )}
     </div>
   );
 }

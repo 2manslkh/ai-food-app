@@ -14,10 +14,17 @@ export function useCreateMealPlan() {
       name,
       startDate,
       endDate,
+      nutritionTarget,
     }: {
       name: string;
       startDate: string;
       endDate: string;
+      nutritionTarget: {
+        calories: number;
+        protein: number;
+        carbs: number;
+        fats: number;
+      };
     }) => {
       if (!userId) throw new Error("User not authenticated");
       const { data, error } = await supabase.rpc("create_meal_plan", {
@@ -25,6 +32,10 @@ export function useCreateMealPlan() {
         p_name: name,
         p_start_date: startDate,
         p_end_date: endDate,
+        p_calories: nutritionTarget.calories,
+        p_protein: nutritionTarget.protein,
+        p_carbs: nutritionTarget.carbs,
+        p_fats: nutritionTarget.fats,
       });
       if (error) throw error;
       return data;
@@ -523,5 +534,47 @@ export function useUpdateMealDay() {
       queryClient.invalidateQueries({ queryKey: ["meals", variables.mealDayId] });
       queryClient.invalidateQueries({ queryKey: ["mealPlanDays"] });
     },
+  });
+}
+
+// Add this new hook
+export function useFetchMealPlanDetails(mealPlanId: string | undefined) {
+  const { supabase } = useSupabase();
+
+  return useQuery({
+    queryKey: ["mealPlan", mealPlanId],
+    queryFn: async () => {
+      if (!mealPlanId) throw new Error("No meal plan ID provided");
+
+      const { data, error } = await supabase
+        .from("meal_plans")
+        .select(
+          `
+          *,
+          nutrition_targets (
+            calories,
+            protein,
+            carbs,
+            fats
+          )
+        `
+        )
+        .eq("id", mealPlanId)
+        .single();
+
+      if (error) throw error;
+      if (!data) throw new Error("Meal plan not found");
+
+      return {
+        ...data,
+        nutritionTarget: {
+          calories: data.nutrition_targets?.calories ?? 2000,
+          protein: data.nutrition_targets?.protein ?? 150,
+          carbs: data.nutrition_targets?.carbs ?? 200,
+          fats: data.nutrition_targets?.fats ?? 65,
+        },
+      };
+    },
+    enabled: !!mealPlanId,
   });
 }

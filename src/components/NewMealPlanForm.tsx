@@ -5,21 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { PieChartComponent as PieChart } from "@/components/ui/pie-chart";
-import { Meal, WeeklyPlan } from "@/types";
-import { Progress } from "@/components/ui/progress";
-import { AddMealDialog } from "./AddMealDialog";
-import { MealCardCompact } from "./MealCardCompact";
-import {
-  useCreateMealPlan,
-  useFetchMealPlans,
-  useFetchUserFavoriteMeals,
-  useSaveMealPlanDays,
-  useFetchMealPlanDays,
-} from "@/hooks/useApi";
+import { WeeklyPlan } from "@/types";
+
+import { useCreateMealPlan, useFetchMealPlans } from "@/hooks/useApi";
 import { useUserId } from "@/hooks/useUserId";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/dist/client/components/navigation";
+import { Slider } from "@/components/ui/slider";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface NutritionTarget {
   calories: number;
@@ -36,6 +29,37 @@ interface DailyNutrition {
 }
 
 const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+const NUTRITION_PRESETS = {
+  balanced: {
+    name: "Balanced",
+    calories: 2000,
+    protein: 150,
+    carbs: 225,
+    fats: 65,
+  },
+  lowCarb: {
+    name: "Low Carb",
+    calories: 2000,
+    protein: 175,
+    carbs: 100,
+    fats: 120,
+  },
+  highProtein: {
+    name: "High Protein",
+    calories: 2000,
+    protein: 200,
+    carbs: 175,
+    fats: 55,
+  },
+  keto: {
+    name: "Keto",
+    calories: 2000,
+    protein: 150,
+    carbs: 50,
+    fats: 155,
+  },
+};
 
 export function NewMealPlanForm() {
   const today = new Date();
@@ -76,6 +100,13 @@ export function NewMealPlanForm() {
   const { isLoading, error } = useFetchMealPlans();
   const router = useRouter();
 
+  const [selectedPreset, setSelectedPreset] = useState<string>("balanced");
+
+  const handlePresetChange = (preset: string) => {
+    setSelectedPreset(preset);
+    setNutritionTarget(NUTRITION_PRESETS[preset as keyof typeof NUTRITION_PRESETS]);
+  };
+
   const handleCreateMealPlan = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -93,15 +124,15 @@ export function NewMealPlanForm() {
           name: mealPlanName,
           startDate,
           endDate,
+          nutritionTarget: {
+            calories: nutritionTarget.calories,
+            protein: nutritionTarget.protein,
+            carbs: nutritionTarget.carbs,
+            fats: nutritionTarget.fats,
+          },
         });
 
         router.push(`/meal-plan/${result}`);
-        // setCurrentMealPlanId(result);
-        // toast({
-        //   title: "Success",
-        //   description: "Meal plan created successfully",
-        // });
-        // setShowPlanner(true);
       } catch (error) {
         console.error("Failed to create meal plan:", error);
         toast({
@@ -111,7 +142,7 @@ export function NewMealPlanForm() {
         });
       }
     },
-    [mealPlanName, startDate, endDate, userId, createMealPlanMutation]
+    [router, mealPlanName, startDate, endDate, userId, createMealPlanMutation, nutritionTarget]
   );
 
   return (
@@ -120,7 +151,7 @@ export function NewMealPlanForm() {
         <CardTitle>Create New Meal Plan</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleCreateMealPlan} className="space-y-4">
+        <form onSubmit={handleCreateMealPlan} className="space-y-6">
           <div>
             <Label htmlFor="mealPlanName">Meal Plan Name</Label>
             <Input
@@ -150,6 +181,96 @@ export function NewMealPlanForm() {
               required
             />
           </div>
+
+          <div className="space-y-4">
+            <Label>Nutrition Presets</Label>
+            <RadioGroup
+              value={selectedPreset}
+              onValueChange={handlePresetChange}
+              className="flex flex-wrap gap-4"
+            >
+              {Object.entries(NUTRITION_PRESETS).map(([key, preset]) => (
+                <div key={key} className="flex items-center space-x-2">
+                  <RadioGroupItem value={key} id={key} />
+                  <Label htmlFor={key}>{preset.name}</Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </div>
+
+          <div className="space-y-6">
+            <Label>Custom Nutrition Targets</Label>
+
+            <div className="space-y-4">
+              <div className="">
+                <div className="flex items-center justify-between">
+                  <Label>Calories</Label>
+                  <span>{nutritionTarget.calories} kcal</span>
+                </div>
+                <Slider
+                  value={[nutritionTarget.calories]}
+                  onValueChange={(value) =>
+                    setNutritionTarget((prev) => ({ ...prev, calories: value[0] }))
+                  }
+                  min={1000}
+                  max={4000}
+                  step={50}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Protein</Label>
+                  <span>{nutritionTarget.protein}g</span>
+                </div>
+                <Slider
+                  value={[nutritionTarget.protein]}
+                  onValueChange={(value) =>
+                    setNutritionTarget((prev) => ({ ...prev, protein: value[0] }))
+                  }
+                  rangeColor="--chart-1"
+                  min={50}
+                  max={300}
+                  step={5}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Carbs</Label>
+                  <span>{nutritionTarget.carbs}g</span>
+                </div>
+                <Slider
+                  value={[nutritionTarget.carbs]}
+                  onValueChange={(value) =>
+                    setNutritionTarget((prev) => ({ ...prev, carbs: value[0] }))
+                  }
+                  rangeColor="--chart-2"
+                  min={20}
+                  max={400}
+                  step={5}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Fats</Label>
+                  <span>{nutritionTarget.fats}g</span>
+                </div>
+                <Slider
+                  value={[nutritionTarget.fats]}
+                  onValueChange={(value) =>
+                    setNutritionTarget((prev) => ({ ...prev, fats: value[0] }))
+                  }
+                  rangeColor="--chart-3"
+                  min={20}
+                  max={200}
+                  step={5}
+                />
+              </div>
+            </div>
+          </div>
+
           <Button type="submit" disabled={isLoading}>
             {isLoading ? "Creating..." : "Create New Meal Plan"}
           </Button>

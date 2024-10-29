@@ -43,6 +43,17 @@ CREATE TABLE IF NOT EXISTS nutrition_info (
     sugar NUMERIC
 );
 
+-- Nutrition targets table
+CREATE TABLE IF NOT EXISTS nutrition_targets (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    calories INTEGER,
+    protein NUMERIC,
+    carbs NUMERIC,
+    fats NUMERIC,
+    fiber NUMERIC,
+    sugar NUMERIC
+);
+
 -- Meal plans table
 CREATE TABLE IF NOT EXISTS meal_plans (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -50,6 +61,7 @@ CREATE TABLE IF NOT EXISTS meal_plans (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     start_date DATE,
     end_date DATE,
+    nutrition_target_id UUID REFERENCES nutrition_targets(id),
     name TEXT NOT NULL DEFAULT 'Untitled Meal Plan'
 );
 
