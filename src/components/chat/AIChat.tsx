@@ -64,6 +64,8 @@ export function AIChat() {
     dietaryRestrictions: false,
     foodPreferences: false,
   });
+  const [chatCount, setChatCount] = useState(0);
+  const [showGenerateMealsPrompt, setShowGenerateMealsPrompt] = useState(false);
 
   // Focus input on mount
   useEffect(() => {
@@ -215,21 +217,20 @@ export function AIChat() {
         },
       ]);
 
-      // Check if we should show the generate prompt
-      setMessages((prev) => {
-        const lastMessage = prev[prev.length - 1];
-        console.log("has enough preferences", hasEnoughPreferences(preferences));
-        if (
-          lastMessage?.role === "assistant" &&
-          hasEnoughPreferences(preferences) &&
-          !prev.some((msg) => msg.type === "swiper")
-        ) {
-          return [
+      // Increment chat count
+      setChatCount((prev) => prev + 1);
+
+      // Check if we should show the generate prompt (after 2 chats)
+      if (chatCount >= 1 && !messages.some((msg) => msg.type === "swiper")) {
+        // Add a delay before showing the generate meals prompt
+        setTimeout(() => {
+          setShowGenerateMealsPrompt(true);
+          setMessages((prev) => [
             ...prev,
             {
               role: "assistant",
               content:
-                "I have enough information to suggest some meals for you. Would you like to see them? Otherwise, you can tell me more of your preferences.",
+                "Would you like to see some meal suggestions based on our conversation? You can also continue telling me more about your preferences.",
               id: Date.now().toString(),
               type: "prompt",
               action: {
@@ -237,10 +238,9 @@ export function AIChat() {
                 onClick: generateMeals,
               },
             },
-          ];
-        }
-        return prev;
-      });
+          ]);
+        }, 5000); // 5 second delay
+      }
     } catch (error) {
       console.error("Error:", error);
       toast({
